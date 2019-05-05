@@ -1,9 +1,10 @@
+#!/bin/bash
 echo "installing..."
 echo "STEP 1  rm -rf treestream"
 rm -rf treestream
-echo "        git clone https://github.com/hbprosper/treestream"
+echo "        git clone https://github.com/hbprosper/treestream.git"
 echo ""
-git clone https://github.com/hbprosper/treestream
+git clone https://github.com/hbprosper/treestream.git
 
 if [ -d "treestream" ]; then
     echo ""
