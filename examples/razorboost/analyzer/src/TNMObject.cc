@@ -77,21 +77,6 @@ TNMObject::TNMObject(const TNMObject& p)
 {
   if ( p.Pt() > 0 )
     SetPtEtaPhiM(p.Pt(), p.Eta(), p.Phi(), p.M());
-  
-  Value["pt"]    = Pt();
-  Value["eta"]   = Eta();
-  Value["|eta|"] = abs(Eta());
-  Value["phi"]   = Phi();
-  Value["mass"]  = M();
-  Value["m"]     = M();
-
-  Value["Pt"]    = Value["pt"];
-  Value["PT"]    = Value["pt"];
-  Value["Eta"]   = Value["eta"];
-  Value["|Eta|"] = Value["|eta|"];
-  Value["Phi"]   = Value["phi"];
-  Value["Mass"]  = Value["mass"];
-  Value["M"]     = Value["mass"];    
 }
 
 
@@ -215,29 +200,6 @@ TNMObject TNMObject::operator*(double a) const
 {
   TLorentzVector p = a * (*dynamic_cast<const TLorentzVector*>(this));
   return TNMObject(Name, p.Pt(), p.Eta(), p.Phi(), p.M());
-}
-
-
-double TNMObject::operator()(std::string a)
-{
-  try
-    {
-      return Value[a];
-    }
-  catch (...)
-    {
-      try
-	{
-	  return abs(Value[a.substr(1, a.size()-2)]);
-	}
-      catch (...)
-	{
-	  cout << "** TNMObject ** attribute "
-	       << a.substr(1, a.size()-2)
-	       << " not found " << endl;
-	  exit(0);
-	}
-    }
 }
 
 void TNMObject::operator()(std::string a, double x)

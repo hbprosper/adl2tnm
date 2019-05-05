@@ -54,7 +54,7 @@ struct TNMObject : public TLorentzVector
   TNMObject  operator*(double a) const;
   inline     operator float()  {return Pt(); }
   inline     operator double() {return Pt(); }
-  double     operator()(std::string varname);
+  inline     double     operator()(std::string varname) { return Value[varname]; }
   void       operator()(std::string varname, double x);
   
   int  UID;   // event unique identifier

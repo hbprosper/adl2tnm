@@ -14,7 +14,7 @@
 //	hepdata     	https://www.hepdata.net/record/ins1633588
 //	doi         	10.1103/PhysRevD.97.012007
 //
-// Created:     Sun May  5 01:01:38 2019 by adl2tnm.py v2.0.0
+// Created:     Sun May  5 09:27:01 2019 by adl2tnm.py v2.0.0
 //------------------------------------------------------------------
 #include "tnm.h"
 #include "TNMAdapter.h"
@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     {
       // read an event into event buffer
       ev.read(entry);
-      if ( entry % 10000 == 0 ) cout << entry << endl;
+      if ( entry % 1000 == 0 ) cout << entry << endl;
 
       // map external objects to internal ones
       std::vector<TNMObject> Tau;

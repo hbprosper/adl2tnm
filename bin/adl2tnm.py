@@ -57,7 +57,8 @@ exclude  = re.compile(KWORDS)
 getwords = re.compile('lha[.][a-zA-Z0-9]+|[a-zA-Z][a-zA-Z0-9_]*')
 getvars  = re.compile('@?[a-zA-Z][a-zA-Z0-9_.;:]*@?')
 getdvars = re.compile('[a-zA-Z]+[a-zA-Z0-9;:]*[.]')
-swords   = re.compile('[\w]+')
+swords   = re.compile('[a-zA-Z][\w]*')
+swords_extended  = re.compile('[|]?[a-zA-Z][\w]*[|]?')
 
 cppAND   = re.compile(r'\band|AND\b')
 cppOR    = re.compile(r'\bor|OR\b')
@@ -92,6 +93,9 @@ NAMES = {'name': 'analyzer',
 OBJECTS = {}
 SINGLETONS = set()
 SYMBOLS = set()
+
+IOBJECTS = {}
+ISYMBOLS = set()
 #--------------------------------------------------------------------------------
 
 TEMPLATE_ADAPTER_CC = \
@@ -322,7 +326,7 @@ int main(int argc, char** argv)
     {
       // read an event into event buffer
       ev.read(entry);
-      if ( entry %(percent)s 10000 == 0 ) cout << entry << endl;
+      if ( entry %(percent)s 1000 == 0 ) cout << entry << endl;
 %(extobjimpl)s
 %(runimpl)s
     }
@@ -436,7 +440,7 @@ def boohoo(message):
 #------------------------------------------------------------------------------
 # fill various caches
 #------------------------------------------------------------------------------
-def fill_OBJECTS_and_SINGLETONS(filename='../variables.txt'):
+def fill_EXTERNALS(filename='../variables.txt'):
     if not os.path.exists(filename):
         boohoo('''
     file %s not found
@@ -481,7 +485,8 @@ def fill_OBJECTS_and_SINGLETONS(filename='../variables.txt'):
 
         #print(vtype, oname, fname)
         
-        if not OBJECTS.has_key(oname): OBJECTS[oname] = {}
+        if not OBJECTS.has_key(oname):
+            OBJECTS[oname] = {}
         OBJECTS[oname][fname] = vtype
         SYMBOLS.add(oname)
         SYMBOLS.add(fname)
@@ -561,8 +566,17 @@ def buildAdapterBody(names, filename='../variables.txt'):
     sbody = ''
     vbody = ''
     onames= OBJ.keys()
-    
+
+
     for oname in onames:
+        
+        # only build objects that appear in the internal symbol table        
+        if not (oname in ISYMBOLS):
+            continue
+        
+        if DEBUG > 0:
+            print('buildAdapter object ( %s )' % oname)
+        
         obj =  OBJ[oname]
         names['oname'] = oname
         
@@ -592,6 +606,8 @@ def buildAdapterBody(names, filename='../variables.txt'):
                     names['fname'] = vname
                 else:
                     names['fname'] = fname
+                # only fields that appear in internal symbol table
+                if not (fname in ISYMBOLS): continue
                 sbody += '%(tab)sq.Value["%(fname)s"] \t= ev.%(vname)s;\n' % names
             sbody += '''
       p = q;
@@ -626,10 +642,25 @@ def buildAdapterBody(names, filename='../variables.txt'):
                 names['vname'] = vname               
                 if fname == '':
                     names['fname'] = '"%s"' % vname
+                    fname = vname
                 else:
-                    names['fname'] = '"%s"' % fname                
+                    names['fname'] = '"%s"' % fname
+
+                # only fields that appear in internal symbol table
+                if not (fname in ISYMBOLS):
+                    aname = '|%s|' % fname
+                    if not (aname in ISYMBOLS):
+                        continue
+                else:
+                    aname = None
+                    
                 vbody += '%(tab)sp.back().Value[%(fname)s] '\
-                  '\t= ev.%(vname)s[c];\n' % names
+                    '\t= ev.%(vname)s[c];\n' % names
+                    
+                if aname != None:
+                     names['fname'] = '"|%s|"' % fname
+                     vbody += '%(tab)sp.back().Value[%(fname)s] '\
+                       '\t= abs(ev.%(vname)s[c]);\n' % names                    
             vbody += '''        }
       return;
     }
@@ -922,10 +953,18 @@ def extractBlocks(filename):
             # or a keyword), so current record is the end of the
             # current statement
             blocks[bname]['body'].append(' '.join(statement))
-            #DB
+
             if DEBUG > 0:
                 print(" %s statement( %s )" % (bname,
-                                                   blocks[bname]['body']))               
+                                                   blocks[bname]['body']))
+
+            # update internal symbol table
+            ISYMBOLS.add(bname)
+            wds = swords_extended.findall(blocks[bname]['body'][-1])
+            tok = wds[0]
+            wds = wds[1:]
+            ISYMBOLS.update(set(wds))
+            
             # remember to reset statement
             statement = []
 
@@ -988,6 +1027,9 @@ def extractBlocks(filename):
         res = str.strip(res)
         if res == '': continue
             
+        ISYMBOLS.add(name)
+        ISYMBOLS.add('_%s' % name)
+        
         t = str.split(res, ':')
         header = str.strip(t[0])
 
@@ -1019,7 +1061,7 @@ def extractBlocks(filename):
     if DEBUG > 0:
         if len(funnames) == 0:
             print('\n\t*** NO FUNCTIONS IN ADL FILE ***\n')
-
+            
     #--------------------------------------------
     # do some checks
     #--------------------------------------------
@@ -1603,19 +1645,19 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
                 
                 # handle MULTIPLE TAKE COMMANDS
                 sort_objects = True
-                
-                objdef += '\n%s// concatenate vectors\n' % tab
-                objdef += '%svector<TNMObject> o; size_t n = 0;\n\n' % tab
                 objdef_inloop = ''
+                
+                objdef += '%s// concatenate vectors\n' % tab
+                objdef += '%svector<TNMObject> o;\n' % tab           
                 for v in take_values:
                     t = str.split(v)
                     value   = t[0]
-                    objdef += '%sn = o.size();\n' % tab
-                    objdef += '%so.resize(n + %s.size());\n' % \
-                      (tab, value)
-                    objdef += '%scopy(%s.begin(), %s.end(), o.begin() + n);\n\n' % \
-                      (tab, value, value)
-
+                    objdef += '%sfor(size_t n=0; n < %s.size(); n++)\n' % \
+                    (tab, v)
+                    objdef += '%s  {\n' % tab
+                    objdef += '%s    o.push_back(%s[n]);\n' % (tab, value)
+                    objdef += '%s  }\n' % tab
+                        
                     # handle take instance
                     
                     if len(t) > 1:
@@ -1623,7 +1665,8 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
                         objdef_inloop = '%s%sTNMObject& %s = p;\n' % \
                         (tab, tab4, obj_instance)
                         local_vars.add(obj_instance)                        
-            
+                objdef += '%s\n' % tab
+                
             if singleton_object:
                 pass
             else:
@@ -2157,7 +2200,7 @@ def main():
         mkanalyzer.py failed. 
         ''' % names)
 
-    fill_OBJECTS_and_SINGLETONS(filename='variables.txt')
+    fill_EXTERNALS(filename='variables.txt')
 
     # change to analyzer directory
     cwd = os.getcwd()
@@ -2189,7 +2232,24 @@ cp $ADL2TNM_PATH/downloads/TNMObject.cc src/
     os.system(cmd)
     
     # -----------------------------------------------------
-    # either create an event adapter or copy an existing
+    # get blocks from ADL file
+    # -----------------------------------------------------    
+    names['fundef']   = ''
+    names['objdef']   = ''
+    names['vardef']   = ''
+    names['aodimpl']  = ''
+    names['percent']  = '%'
+    blocks = extractBlocks(filename)
+
+    blocktypes = {}
+    for btype in BLOCKTYPES:
+        blocktypes[btype] = set()
+        if not blocks.has_key(btype): continue
+        for name, words, records in blocks[btype]:
+            blocktypes[btype].add(name)
+            
+    # -----------------------------------------------------
+    # either create an event adapter,  or copy an existing
     # one to local area
     # -----------------------------------------------------
     if option.adaptername == '':
@@ -2214,24 +2274,8 @@ cp $ADL2TNM_PATH/downloads/%(adaptername).cc src/
 ''' % names
         os.system(cmd)        
 
-    # -----------------------------------------------------
-    # get blocks from ADL file
-    # -----------------------------------------------------    
-    names['fundef']   = ''
-    names['objdef']   = ''
-    names['vardef']   = ''
-    names['aodimpl']  = ''
-    names['percent']  = '%'
-    blocks = extractBlocks(filename)
-
-    blocktypes = {}
-    for btype in BLOCKTYPES:
-        blocktypes[btype] = set()
-        if not blocks.has_key(btype): continue
-        for name, words, records in blocks[btype]:
-            blocktypes[btype].add(name)
-
-    if DEBUG == 0: printBlocks(blocks)
+            
+    if DEBUG > 0: printBlocks(blocks)
 
     process_info(names, blocks)
     

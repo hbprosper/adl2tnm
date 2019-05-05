@@ -1,0 +1,101 @@
+# arxiv:1710.11188, CMS SUSY stop (resolved and boosted)
+
+info analysis
+# Details about experiment
+  experiment CMS
+  id SUS-16-050
+  publication Phys.Rev. D97 (2018) no.1, 012007 
+  sqrtS 13.0
+  lumi 35.9
+  arXiv 1710.11188
+  hepdata https://www.hepdata.net/record/ins1633588
+  doi 10.1103/PhysRevD.97.012007
+
+### OBJECT SELECTIONS
+
+object AK4jets
+  take Jet
+  select pt > 30
+  select |eta| < 2.4
+
+object AK8jets
+  take FatJet
+  select pt > 200
+  select |eta| < 2.4
+
+# b-tagged jets - medium
+object bjets_medium
+  take AK4jets
+  select btagDeepB > 0.4941
+
+object Wjets_masstag
+  take AK8jets
+  select msoftdrop [] 65 105
+
+# W jets - W-tagged
+object Wjets
+  take Wjets_masstag
+  select tau2 / tau1 <= 0.4
+
+object muons_veto
+  take Muon
+  select pt > 5
+  select |eta| < 2.4
+  select softId == 1
+  select miniPFRelIso_all < 0.2
+  select |dxy| < 0.2
+  select |dz| < 0.5
+
+object electrons_veto
+  take Electron
+  select pt > 5
+  select |eta| < 2.5
+  select miniPFRelIso_all < 0.1
+  select |dxy| < 0.05
+  select |dz| < 0.1
+
+object leptons_veto
+  take electrons_veto
+  take muons_veto
+
+object taus_veto
+  take Tau
+  select pt > 18    # from 2016 AN Table 12
+  select |eta| < 2.5   # from 2016 AN Table 12
+  select idMVAnewDM2017v2 >= 4
+
+# missing transverse energy
+object met
+  take MET
+
+# Megajets are 4-vectors, each consisting of multiple jet.
+# Each event with njets > 0 is partitioned into 2 megajets.
+
+object megajets
+  take fmegajets(AK4jets)
+
+
+### EVENT VARIABLES
+
+define MR = fMR(megajets)
+define R2 = sqrt(fMTR(megajets, met) / MR)
+define dphimegajets = dPhi(megajets[0], megajets[1])
+
+### EVENT SELECTION
+# Boosted categories
+
+# Boost pre-selection cuts
+region preselection
+  select AK4jets.size >= 3
+  select AK8jets.size >= 1
+  select MR > 800
+  select R2 > 0.08
+
+# W category signal and control regions
+region W_S
+  select preselection
+  select leptons_veto.size == 0
+  select taus_veto.size == 0
+  select bjets_medium.size >= 1
+  select Wjets.size >= 1
+  select dphimegajets < 2.8

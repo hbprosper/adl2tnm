@@ -14,7 +14,7 @@
 //	hepdata     	https://www.hepdata.net/record/ins1633588
 //	doi         	10.1103/PhysRevD.97.012007
 //
-// Created:     Sun May  5 01:01:38 2019 by adl2tnm.py v2.0.0
+// Created:     Sun May  5 09:27:01 2019 by adl2tnm.py v2.0.0
 //------------------------------------------------------------------
 #include <algorithm>
 #include "analyzer_s.h"
@@ -460,18 +460,17 @@ struct object_leptons_veto_s : public TNMThing
   ~object_leptons_veto_s() {}
   bool create()
   {
-
     // concatenate vectors
-    vector<TNMObject> o; size_t n = 0;
-
-    n = o.size();
-    o.resize(n + electrons_veto.size());
-    copy(electrons_veto.begin(), electrons_veto.end(), o.begin() + n);
-
-    n = o.size();
-    o.resize(n + muons_veto.size());
-    copy(muons_veto.begin(), muons_veto.end(), o.begin() + n);
-
+    vector<TNMObject> o;
+    for(size_t n=0; n < electrons_veto.size(); n++)
+      {
+        o.push_back(electrons_veto[n]);
+      }
+    for(size_t n=0; n < muons_veto.size(); n++)
+      {
+        o.push_back(muons_veto[n]);
+      }
+    
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
@@ -488,18 +487,17 @@ struct object_leptons_sel_s : public TNMThing
   ~object_leptons_sel_s() {}
   bool create()
   {
-
     // concatenate vectors
-    vector<TNMObject> o; size_t n = 0;
-
-    n = o.size();
-    o.resize(n + electrons_sel.size());
-    copy(electrons_sel.begin(), electrons_sel.end(), o.begin() + n);
-
-    n = o.size();
-    o.resize(n + muons_sel.size());
-    copy(muons_sel.begin(), muons_sel.end(), o.begin() + n);
-
+    vector<TNMObject> o;
+    for(size_t n=0; n < electrons_sel.size(); n++)
+      {
+        o.push_back(electrons_sel[n]);
+      }
+    for(size_t n=0; n < muons_sel.size(); n++)
+      {
+        o.push_back(muons_sel[n]);
+      }
+    
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
