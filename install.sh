@@ -7,12 +7,6 @@ echo ""
 git clone https://github.com/hbprosper/treestream
 
 if [ -d "treestream" ]; then
-    source setup.sh
-    source treestream/setup.sh
-    echo ""
-    echo " ADL2TNM_PATH = $ADL2TNM_PATH"
-    echo " TREESTREAM_PATH = $TREESTREAM_PATH"
-
     echo ""
     echo "STEP 2  cd treestream"
     cd treestream

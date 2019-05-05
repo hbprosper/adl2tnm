@@ -25,7 +25,8 @@ Install this package using the commands
   ```
 and once per terminal session do
 ```bash
-  source setup.sh
+ source setup.sh
+ source treestream/setup.sh
 ```
 
 ## Example
