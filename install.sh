@@ -1,4 +1,3 @@
-#!/bin/bash
 echo "installing..."
 echo "STEP 1  rm -rf treestream"
 rm -rf treestream
