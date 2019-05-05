@@ -34,11 +34,10 @@ described in the ADL file
 
 __examples/razorboost/razorboost.adl__ 
 
-on a __CMS nano-AOD__ file, which we assume is called 
+on a 1000-event __CMS nano-AOD__ file called 
 
 __examples/data/ttjets\_nano.root__
 
-which contains 1000 events.
 Go to the directory __examples/razorboost__  and execute the following
 command
 ```bash
