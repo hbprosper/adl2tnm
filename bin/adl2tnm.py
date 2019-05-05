@@ -2164,6 +2164,7 @@ def main():
     filename, option = decodeCommandLine()
     names  = NAMES
     names['filename']    = filename
+    names['analyzer']    = option.name    
     names['name']        = option.name    
     names['treename']    = option.treename
     names['adaptername'] = option.adaptername
