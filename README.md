@@ -61,7 +61,7 @@ List, in the file __filelist.txt__, the names of the files to be read by cmsnano
 e.g., as follows,
 ```bash
 	ls -1 ../../data/ttjets_nano.root > filelist.txt
-er | tee summary.dat
+./myanalyzer | tee summary.dat
 ```
 to run the  program.
 You will see several "no dictionary" warnings about complicated types that
