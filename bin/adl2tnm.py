@@ -3,8 +3,7 @@
 # Description: Prototype transpiler of a ADL description to a TNM analyzer
 # Created: 12-Dec-2017 Harrison B. Prosper & Sezen Sekmen
 #          12-May-2018 HBP assume case insensitivity, remove dependence on loop
-#                      keyword, better handling of mapping from vector<TEParticle>
-#                      to vector<TLorentzVector>
+#                      keyword, better handling of mapping from vector<TEParticle#                      to vector<TLorentzVector>
 #          14-May-2018 HBP add count histogram for each cut block
 #          16-May-2018 HBP completely decouple lhada analyzer from tnm
 #          18-May-2018 HBP fix bug process_functions
@@ -126,7 +125,6 @@ using namespace std;
 void %(adaptername)s::operator()(eventBuffer& ev, 
 %(tab)sstd::string name, std::vector<TNMObject>& p)
 {
-  TString key(name.c_str());
   p.clear();
 %(vbody)s
 }
@@ -134,7 +132,6 @@ void %(adaptername)s::operator()(eventBuffer& ev,
 void %(adaptername)s::operator()(eventBuffer& ev, 
 %(tab)sstd::string name, TNMObject& p)
 {
-  TString key(name.c_str());
 %(sbody)s
 }
 '''
@@ -592,7 +589,7 @@ def buildAdapterBody(names, filename='../variables.txt'):
                     names[fname] = 'ev.%s' % obj[fname]
                     
             sbody += '''
-  if ( key.CompareTo("%(oname)s" == 0) )
+  if ( name == string("%(oname)s") )
     {
       TNMObject q("%(oname)s", 
                   %(pt)s, 
@@ -628,7 +625,7 @@ def buildAdapterBody(names, filename='../variables.txt'):
             names['vname'] = vname
             
             vbody += '''
-  if ( key.Contains("%(oname)s") )
+  if ( name == string("%(oname)s") )
     {
       for (size_t c=0; c < ev.%(vname)s.size(); c++)
         {
@@ -1104,7 +1101,7 @@ def process_info(names, blocks):
     info += '//'
     names['info'] = info
 #--------------------------------------------------------------------------------
-def process_functions(names, blocks):
+def process_functions(names, blocks, blocktypes):
 
     if DEBUG > 0:
         print('\nBEGIN( process_function )')
@@ -1646,7 +1643,7 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
                 # handle MULTIPLE TAKE COMMANDS
                 sort_objects = True
                 objdef_inloop = ''
-                
+                objdef += '%s%s.clear();\n' % (tab, name)                        
                 objdef += '%s// concatenate vectors\n' % tab
                 objdef += '%svector<TNMObject> o;\n' % tab           
                 for v in take_values:
@@ -1937,7 +1934,7 @@ def process_objects(names, blocks, blocktypes):
     names['extobjimpl'] = extobjimpl
     names['vobjects']   = vobjects
 #--------------------------------------------------------------------------------
-def process_defines(names, blocks):
+def process_defines(names, blocks, blocktypes):
     if DEBUG > 0:
         print('\nBEGIN( process_defines )')
 
@@ -1970,6 +1967,7 @@ def process_defines(names, blocks):
         statement = ' '.join(records)
         wordset   = set(swords.findall(statement))
         deflist.append([name, wordset.intersection(defines)])
+        statement = convert2cpp(statement, blocktypes)
         defmap[name] = statement
     sorted_deflist = sortObjects(deflist)
 
@@ -1985,11 +1983,15 @@ def process_defines(names, blocks):
             boohoo(" problem with define %s" % name)
             
         # check type of first word and assign
-        # that type to name and add name to objects,
-        # otherwise default to float
+        # that type to the define object and add name to objects,
+        # otherwise default to float.
+        # however, if we have a.size set the type to size_t
         if words[0] in objects:
-            deftype = 'TNMObject'
-            objects.add(name)
+            if words[1] == 'size':
+                deftype = 'size_t'
+            else:
+                deftype = 'TNMObject'
+                objects.add(name)
         else:
             deftype  = 'float'
         deftypemap[name] = deftype
@@ -2092,7 +2094,8 @@ def process_regions(names, blocks, blocktypes):
 ''' % name
         
         for value in values:
-            cutdef += '    hcount->Fill("%s", 0);\n' % nip.sub('', value)        
+            cutdef += '    hcount->Fill("%s", 0);\n' % value
+            #nip.sub('', value)        
         cutdef += '  }\n\n'
         cutdef += '  ~region_%s_s() {}\n\n' % name
         cutdef += '''  void summary(std::ostream& os)
@@ -2175,14 +2178,9 @@ def main():
     result = os.popen('which mkanalyzer.py').read()
     if str.strip(result) == '':
         boohoo('''
-        command mkanalyzer.py not found. please make sure that treestream
-        is installed:
-
-        cd $HOME/external
-        git clone https://github.com/hbprosper/treestream
-        cd treestream
-        make
-        source setup.sh      (executed once per terminal session)
+        command mkanalyzer.py not found. please make sure that adl2tnm
+        is installed using
+            source install.sh
         ''')
 
     # check that variables.txt exists
@@ -2280,13 +2278,13 @@ cp $ADL2TNM_PATH/downloads/%(adaptername).cc src/
 
     process_info(names, blocks)
     
-    process_functions(names, blocks)
+    process_functions(names, blocks, blocktypes)
 
-    process_objects(names, blocks, blocktypes)
+    process_objects(names,   blocks, blocktypes)
 
-    process_defines(names, blocks)
+    process_defines(names,   blocks, blocktypes)
 
-    process_regions(names, blocks, blocktypes)
+    process_regions(names,   blocks, blocktypes)
 
     # --------------------------------------------    
     # write out C++ code

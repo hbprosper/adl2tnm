@@ -12,7 +12,7 @@ package is structured as follows,
 | --------|-------------------|
 | bin           |  location of __adl2tnm.py__                                  |
 | examples/razorboost |  CMS razor boost analysis |
-| examples/data           |  contains __SUSY\_T5tttt\_CMSNANOAOD.root__ |
+| examples/data           |  contains __ttjets\_nano.root__ |
 | downloads   | required code would be downloaded here |
 
 ## Installation
@@ -25,8 +25,9 @@ Install this package using the commands
   ```
 and once per terminal session do
 ```bash
- source setup.sh
- source treestream/setup.sh
+  source setup.(c)sh
+  cd treestream
+  source setup.(c)sh
 ```
 
 ## Example
@@ -37,32 +38,30 @@ __examples/razorboost/razorboost.adl__
 
 on a 1000-event __CMS nano-AOD__ file called 
 
-__examples/data/SUSY\_T5tttt\_CMSNANOAOD.root__
+__examples/data/ttjets\_nano.root__
 
 Go to the directory __examples/razorboost__  and execute the following
 command
 ```bash
-	mkvariables.py ../data/SUSY_T5tttt_CMSNANOAOD.root
+	mkvariables.py ../data/ttjets_nano.root
 ```
 This should produce a file called __variables.txt__ listing all of the
 variables in the first tree (Events) found in the ROOT file.  Now execute the command
 ```bash
-	adl2tnm.py -a myanalyzer razorboost_adl2tnm.adl
+	adl2tnm.py -a myanalyzer razorboost.adl
 ```
 This should create a directory called __myanalyzer__. Go to that
 directory and build the analyzer program __myanalyzer__ using
 ```bash
    cd myanalyzer
-	make
+   make
+   source setup.(c)sh
 ```
 List, in the file __filelist.txt__, the names of the files to be read by cmsnano,
 e.g., as follows,
 ```bash
-	ls -1 ../../data/SUSY_T5tttt_CMSNANOAOD.root > filelist.txt
-```
-then do
-```bash
-	./myanalyzer | tee summary.dat
+	ls -1 ../../data/ttjets_nano.root > filelist.txt
+er | tee summary.dat
 ```
 to run the  program.
 You will see several "no dictionary" warnings about complicated types that

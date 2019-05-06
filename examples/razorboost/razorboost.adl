@@ -190,8 +190,10 @@ define METpho = met + photons[0]
 
 define R2l = sqrt(fMTR(megajets, METl) / MR)
 define R2ll = sqrt(fMTR(megajets, METll) / MR)
+
 #define MR0pho = fMR(megajets_0pho)
 #define R2pho = sqrt(fMTR(megajets_0pho, METpho) / MR0pho)
+
 define Mll = fMll(leptons_sel[0], leptons_sel[1])
 define MT = fMT(leptons_veto[0], met)
 
