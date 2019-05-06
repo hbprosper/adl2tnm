@@ -353,6 +353,7 @@ struct %(defname)s_s : public TNMThing
     else
       {
         done  = true;
+%(deftrig)s
         value = %(defstatement)s;
         return value;
       }
@@ -2019,7 +2020,6 @@ def process_defines(names, blocks, blocktypes):
     for name, w in sorted_deflist:
         statement = defmap[name]        
         
-        defstatement = ''        
         words   = swords.findall(statement)
         wordset = set(words)
         if functions:
@@ -2028,15 +2028,26 @@ def process_defines(names, blocks, blocktypes):
                 rtype, intname, extname, argtypes = functions[word]
                 cmd = re.compile(r'\b%s\b' % word)
                 statement = cmd.sub(intname, statement)
-                
-        # now prefix object name with type cast
+
+        # trigger call to defines
+        ws = swords.findall(statement)
+        deftrig = ''                
+        for key in ws:
+            if not deftypemap.has_key(key): continue
+            deftype = deftypemap[key]
+            if deftype == 'float': continue
+            cmd = re.compile(r'\b%s\b' % key)
+            deftrig += '%sTNMObject %s_t = %s;\n' % (' '*8, key, key)
+            
+        # now change statements
         for key in deftypemap.keys():
             deftype = deftypemap[key]
             if deftype == 'float': continue
             cmd = re.compile(r'\b%s\b' % key)
-            statement = cmd.sub('(%s&)%s' % (deftype, key), statement)
-        
+            statement = cmd.sub('%s_t' % key, statement)
+            
         names['defname'] = name
+        names['deftrig'] = deftrig
         names['deftype'] = deftypemap[name]
         names['defstatement'] = statement
         deflist = [name, words]
