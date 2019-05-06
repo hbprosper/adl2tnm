@@ -47,7 +47,7 @@ TNMObject::TNMObject(string name,
   
   Value["pt"]    = pt;
   Value["eta"]   = eta;
-  Value["|eta|"] = abs(eta);
+  Value["|eta|"] = fabs(eta);
   Value["phi"]   = phi;
   Value["mass"]  = mass;
   Value["m"]     = mass;
@@ -77,6 +77,38 @@ TNMObject::TNMObject(const TNMObject& p)
 {
   if ( p.Pt() > 0 )
     SetPtEtaPhiM(p.Pt(), p.Eta(), p.Phi(), p.M());
+}
+
+
+TNMObject::TNMObject(const TLorentzVector& p)
+  : TLorentzVector(),
+    UID(++s_UID),
+    PID(0),
+    ID(0),
+    Status(0),
+    Mother(0),
+    Skip(false),
+    Order(0),
+    Name(""),
+    Daughters(vector<int>()),
+    Value(map<string, double>())
+{
+  if ( p.Pt() > 0 )
+    SetPtEtaPhiM(p.Pt(), p.Eta(), p.Phi(), p.M());
+  Order = p.Pt();
+  Value["pt"]    = Pt();
+  Value["eta"]   = Eta();
+  Value["|eta|"] = fabs(Eta());
+  Value["phi"]   = Phi();
+  Value["mass"]  = M();
+  Value["m"]     = M();
+  Value["Pt"]    = Value["pt"];
+  Value["PT"]    = Value["pt"];
+  Value["Eta"]   = Value["eta"];
+  Value["|Eta|"] = Value["|eta|"];
+  Value["Phi"]   = Value["phi"];
+  Value["Mass"]  = Value["mass"];
+  Value["M"]     = Value["mass"];   
 }
 
 
@@ -127,7 +159,7 @@ TNMObject& TNMObject::operator=(const TLorentzVector& rhs)
 
       Value["pt"]    = Pt();
       Value["eta"]   = Eta();
-      Value["|eta|"] = abs(Eta());
+      Value["|eta|"] = fabs(Eta());
       Value["phi"]   = Phi();
       Value["mass"]  = M();
       Value["m"]     = M();
@@ -147,26 +179,8 @@ TNMObject TNMObject::operator+(const TNMObject& o) const
   const TLorentzVector* p1 = dynamic_cast<const TLorentzVector*>(this);
   const TLorentzVector* p2 = dynamic_cast<const TLorentzVector*>(&o);
   TLorentzVector  p  = *p1 + *p2;
-  TNMObject q("", p.Pt(), p.Eta(), p.Phi(), p.M());
-  q.Name = this->Name + string("+") + o.Name;
-  q.PID  = abs(this->PID);
-
-  q.Value["pt"]    = p.Pt();
-  q.Value["eta"]   = p.Eta();
-  q.Value["|eta|"] = abs(p.Eta());
-  q.Value["phi"]   = p.Phi();
-  q.Value["mass"]  = p.M();
-  q.Value["m"]     = p.M();
-
-  q.Value["Pt"]    = q.Value["pt"];
-  q.Value["PT"]    = q.Value["pt"];
-  q.Value["Eta"]   = q.Value["eta"];
-  q.Value["|Eta|"] = q.Value["|eta|"];
-  q.Value["Phi"]   = q.Value["phi"];
-  q.Value["Mass"]  = q.Value["mass"];
-  q.Value["M"]     = q.Value["mass"];  
-  
-  return q;
+  string name(this->Name + string("+") + o.Name);
+  return TNMObject(name, p.Pt(), p.Eta(), p.Phi(), p.M());
 }
 
 TNMObject TNMObject::operator-(const TNMObject& o) const
@@ -174,26 +188,8 @@ TNMObject TNMObject::operator-(const TNMObject& o) const
   const TLorentzVector* p1 = dynamic_cast<const TLorentzVector*>(this);
   const TLorentzVector* p2 = dynamic_cast<const TLorentzVector*>(&o);
   TLorentzVector  p  = *p1 - *p2;
-  TNMObject q("", p.Pt(), p.Eta(), p.Phi(), p.M());
-  q.Name = this->Name + string("-") + o.Name;
-  q.PID  = abs(this->PID);
-
-  q.Value["pt"]    = p.Pt();
-  q.Value["eta"]   = p.Eta();
-  q.Value["|eta|"] = abs(p.Eta());
-  q.Value["phi"]   = p.Phi();
-  q.Value["mass"]  = p.M();
-  q.Value["m"]     = p.M();
-
-  q.Value["Pt"]    = q.Value["pt"];
-  q.Value["PT"]    = q.Value["pt"];
-  q.Value["Eta"]   = q.Value["eta"];
-  q.Value["|Eta|"] = q.Value["|eta|"];
-  q.Value["Phi"]   = q.Value["phi"];
-  q.Value["Mass"]  = q.Value["mass"];
-  q.Value["M"]     = q.Value["mass"];    
-   
-  return q;  
+  string name(this->Name + string("+") + o.Name);
+  return TNMObject(name, p.Pt(), p.Eta(), p.Phi(), p.M());
 }
 
 TNMObject TNMObject::operator*(double a) const

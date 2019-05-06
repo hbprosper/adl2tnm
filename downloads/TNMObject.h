@@ -37,11 +37,14 @@ class TNMBool : public std::vector<bool>
   bool value;
 };
 
+static size_t UnknownValueCount = 0;
+
 struct TNMObject : public TLorentzVector
 {
   TNMObject();
   TNMObject(std::string name, double PT, double Eta, double Phi, double Mass=0);
   TNMObject(const TNMObject& p);
+  TNMObject(const TLorentzVector& p);
   ~TNMObject();
 
   static std::string name(int pdgid);
@@ -54,7 +57,22 @@ struct TNMObject : public TLorentzVector
   TNMObject  operator*(double a) const;
   inline     operator float()  {return Pt(); }
   inline     operator double() {return Pt(); }
-  inline     double     operator()(std::string varname) { return Value[varname]; }
+  inline     double     operator()(std::string varname)
+  {
+  try
+    {
+      return Value[varname];
+    }
+  catch(...)
+    {
+      if ( UnknownValueCount < 1 )
+	{
+	  UnknownValueCount++;
+	  std::cout << "*** UNKNOWN parameter ( " << varname << " )" << std::endl;
+	}
+      return 0;
+    }
+  }
   void       operator()(std::string varname, double x);
   
   int  UID;   // event unique identifier

@@ -91,6 +91,7 @@ NAMES = {'name': 'analyzer',
 # variables.txt file
 OBJECTS = {}
 SINGLETONS = set()
+NONSINGLETONS = set()
 SYMBOLS = set()
 
 IOBJECTS = {}
@@ -458,10 +459,13 @@ def fill_EXTERNALS(filename='../variables.txt'):
         t = str.split(record)
         vtype = t[0]
         vname = t[2]
-        
+        count = int(t[3])
         # determine whether or not current object is a singleton.
-        # a singleton does not have a counter variable
+        # a singleton does not have a counter variable 
         a_singleton = len(t) < 5
+
+        # A Delphes Hack!
+        a_singleton = a_singleton or vname[:8] in ['MissingE', 'ScalarHT']
         k = find(vname, '_')
         if a_singleton:
             if k < 0:
@@ -471,7 +475,8 @@ def fill_EXTERNALS(filename='../variables.txt'):
                 oname = vname[:k]
                 fname = vname[k+1:]
                 
-            SINGLETONS.add(oname)
+            if not oname in NONSINGLETONS:
+                SINGLETONS.add(oname)
         else:
             if k < 0:
                 oname = vname
@@ -479,7 +484,9 @@ def fill_EXTERNALS(filename='../variables.txt'):
             else:
                 oname = vname[:k]
                 fname = vname[k+1:]
-
+                
+            NONSINGLETONS.add(oname)
+            
         #print(vtype, oname, fname)
         
         if not OBJECTS.has_key(oname):
@@ -487,8 +494,8 @@ def fill_EXTERNALS(filename='../variables.txt'):
         OBJECTS[oname][fname] = vtype
         SYMBOLS.add(oname)
         SYMBOLS.add(fname)
-        
-    if DEBUG > 1:
+
+    if DEBUG > 0:
         onames = OBJECTS.keys()
         onames.sort()
         for oname in onames:
@@ -555,7 +562,7 @@ def buildAdapterBody(names, filename='../variables.txt'):
                                                  'mass': None,
                                                  'fields': []}
         # special handling for pt, eta, phi, mass
-        lfname = lower(fname)
+        lfname = fname.lower()
         if lfname in ['pt', 'eta', 'phi', 'mass']: OBJ[oname][lfname] = vname
         OBJ[oname]['fields'].append((fname, vname))
 
@@ -563,7 +570,6 @@ def buildAdapterBody(names, filename='../variables.txt'):
     sbody = ''
     vbody = ''
     onames= OBJ.keys()
-
 
     for oname in onames:
         
@@ -576,8 +582,9 @@ def buildAdapterBody(names, filename='../variables.txt'):
         
         obj =  OBJ[oname]
         names['oname'] = oname
-        
-        if obj['singleton']:
+
+        if oname in SINGLETONS:
+        #if obj['singleton']:
             # ----------------------
             # SINGLETON OBJECT
             # ----------------------            
@@ -587,7 +594,13 @@ def buildAdapterBody(names, filename='../variables.txt'):
                     names[fname] = "0"
                 else:
                     names[fname] = 'ev.%s' % obj[fname]
-                    
+
+            # Delphes hack
+            if oname == 'MissingET':
+                names['pt'] = 'ev.MissingET_MET'
+            elif oname == 'ScalarHT':
+                namws['pt'] = 'ev.ScalarHT_HT'
+                
             sbody += '''
   if ( name == string("%(oname)s") )
     {
@@ -643,6 +656,9 @@ def buildAdapterBody(names, filename='../variables.txt'):
                 else:
                     names['fname'] = '"%s"' % fname
 
+                # Delphes hack
+                if vname.find('_size') > 2: continue
+                    
                 # only fields that appear in internal symbol table
                 if not (fname in ISYMBOLS):
                     aname = '|%s|' % fname
@@ -657,7 +673,7 @@ def buildAdapterBody(names, filename='../variables.txt'):
                 if aname != None:
                      names['fname'] = '"|%s|"' % fname
                      vbody += '%(tab)sp.back().Value[%(fname)s] '\
-                       '\t= abs(ev.%(vname)s[c]);\n' % names                    
+                       '\t= fabs(ev.%(vname)s[c]);\n' % names                    
             vbody += '''        }
       return;
     }
@@ -1209,10 +1225,9 @@ def process_functions(names, blocks, blocktypes):
                         # check for vector<TLorenzVector>
                         if tlorentz_vector.findall(argtypes[ii]) != []:
                             argc = arg + '_'
-                            copyvars+='  vector<TLorentzVector> %s(%s.size());\n'\
-                              % (argc, arg)
-                            copyvars+='  copy(%s.begin(), %s.end(), %s.begin());\n'\
-                              % (arg, arg, argc)
+                            copyvars+='  vector<TLorentzVector> %s;\n' % argc
+                            copyvars+='  for(size_t ii=0; ii < %s.size(); ii++)'\
+                              ' %s.push_back(%s[ii]);\n' % (arg, argc, arg)
                             argtypes[ii] = 'vector<TNMObject>&'
                             
                         argsrec += '%s %s, ' % (argtypes[ii], arg)
@@ -1224,8 +1239,9 @@ def process_functions(names, blocks, blocktypes):
                         copyvars+='\n'
                         copyvars+='  vector<TLorentzVector> t '\
                           '= %s(%s);\n' % (extname, argscall)
-                        copyvars+='  vector<TNMObject> o(t.size());\n'
-                        copyvars+='  copy(t.begin(), t.end(), o.begin());\n'
+                        copyvars+='  vector<TNMObject> o;\n'
+                        copyvars+='  for(size_t ii=0; ii < t.size(); ii++)'\
+                              ' o.push_back(t[ii]);\n'
                         copyvars+='  return o;'
                         rtype = 'std::vector<TNMObject>'
                     else:
@@ -1859,6 +1875,7 @@ def process_objects(names, blocks, blocktypes):
     # create list of external objects
     extobjdef = ''
     for name in extobjset:
+        #DB
         if DEBUG > 0:
             print 'EXTERNAL OBJECT( %s )' % name        
         singleton = name in SINGLETONS
@@ -1868,6 +1885,8 @@ def process_objects(names, blocks, blocktypes):
                 print "\tsingleton object( %s )" % name
         else:
             extobjdef += 'vector<TNMObject> %s;\n' % name
+            if DEBUG > 0:
+                print "\tmulti object( %s )" % name            
     
     # create records containing declarations of external and
     # internal objects.
