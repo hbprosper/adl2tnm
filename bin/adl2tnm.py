@@ -592,7 +592,7 @@ def buildAdapterBody(names, filename='../variables.txt'):
                     names[fname] = 'ev.%s' % obj[fname]
                     
             sbody += '''
-  if ( key.Contains("%(oname)s") )
+  if ( key.CompareTo("%(oname)s" == 0) )
     {
       TNMObject q("%(oname)s", 
                   %(pt)s, 

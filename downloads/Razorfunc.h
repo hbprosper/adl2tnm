@@ -107,7 +107,7 @@ namespace Razor {
   // Mll
   double fMll(TLorentzVector& lep1, TLorentzVector& lep2){
     TLorentzVector Z = lep1 + lep2;
-    return Z.M();
+    return fabs(Z.M() - 91.187);
   }
   
 }
