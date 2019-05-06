@@ -64,32 +64,6 @@ namespace atlas
     // to be filled in
     return 0;
   }
-  
-  inline
-    double dPhi(double phi1, double phi2)
-  {
-    double deltaphi = fabs(phi2 - phi1);
-    if ( deltaphi > M_PI ) deltaphi = 2 * M_PI - deltaphi;
-    return deltaphi;
-  }
 
-  double dR(double eta1, double phi1, double eta2, double phi2)
-  {
-    double deltaeta = eta1 - eta2;
-    double deltaphi = dPhi(phi1, phi2);
-    return sqrt(deltaeta*deltaeta + deltaphi*deltaphi);
-  }
-
-  inline
-    double dR(TLorentzVector& p1, TLorentzVector& p2)
-  {
-    return p1.DeltaR(p2);
-  }
-
- inline
-    double dPhi(TLorentzVector& p1, TLorentzVector& p2)
-  {
-    return p1.DeltaPhi(p2);
-  }  
 };
 #endif
