@@ -2238,6 +2238,7 @@ cp $ADL2TNM_PATH/downloads/TNMObject.cc src/
     names['vardef']   = ''
     names['aodimpl']  = ''
     names['percent']  = '%'
+    names['tab']      = '  '
     blocks = extractBlocks(filename)
 
     blocktypes = {}
