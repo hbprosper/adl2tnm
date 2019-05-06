@@ -2,7 +2,7 @@
 // File:        analyzer_s.cc
 // Description: Analyzer for ADL-based analysis:
 //
-// ADL file: razorboost.adl
+// ADL file: razorboost_adl2tnm.adl
 // info block
 //	info        	analysis
 //	experiment  	CMS
@@ -14,7 +14,7 @@
 //	hepdata     	https://www.hepdata.net/record/ins1633588
 //	doi         	10.1103/PhysRevD.97.012007
 //
-// Created:     Sun May  5 09:27:01 2019 by adl2tnm.py v2.0.0
+// Created:     Sun May  5 21:48:25 2019 by adl2tnm.py v2.0.0
 //------------------------------------------------------------------
 #include <algorithm>
 #include "analyzer_s.h"
@@ -99,9 +99,9 @@ double	_dR(TLorentzVector& p1, TLorentzVector& p2)
 
 //------------------------------------------------------------------
 // proxies for external objects
-vector<TNMObject> Tau;
-vector<TNMObject> Jet;
 vector<TNMObject> Muon;
+vector<TNMObject> Jet;
+vector<TNMObject> Tau;
 vector<TNMObject> Photon;
 
 TNMObject MET;
@@ -110,83 +110,56 @@ vector<TNMObject> Electron;
 vector<TNMObject> FatJet;
 
 // internal objects
-vector<TNMObject> taus_veto;
-vector<TNMObject> electrons_sel;
+vector<TNMObject> photons;
 vector<TNMObject> AK8jets;
-vector<TNMObject> muons_sel;
+vector<TNMObject> tausVeto;
+vector<TNMObject> electronsVeto;
+vector<TNMObject> muonsVeto;
+vector<TNMObject> muonsSel;
+vector<TNMObject> AK4jets;
 
 TNMObject met;
 
-vector<TNMObject> AK4jets;
-vector<TNMObject> electrons_veto;
-vector<TNMObject> muons_veto;
-vector<TNMObject> photons;
+vector<TNMObject> electronsSel;
+vector<TNMObject> AK4jetsNopho;
 vector<TNMObject> megajets;
-vector<TNMObject> bjets_loose;
-vector<TNMObject> topjets_masstag;
-vector<TNMObject> bjets_medium;
-vector<TNMObject> jets_0pho;
-vector<TNMObject> leptons_veto;
-vector<TNMObject> leptons_sel;
-vector<TNMObject> bjets_tight;
-vector<TNMObject> Wjets_masstag;
-vector<TNMObject> Wjets_antitag;
-vector<TNMObject> topjets;
-vector<TNMObject> topjets_antitag;
-vector<TNMObject> topjets_masstag_0b;
+vector<TNMObject> WjetsMasstag;
+vector<TNMObject> WjetsAntitag;
+vector<TNMObject> bjetsTight;
+vector<TNMObject> megajetsNopho;
+vector<TNMObject> bjetsMedium;
 vector<TNMObject> Wjets;
+vector<TNMObject> bjetsLoose;
+vector<TNMObject> leptonsVeto;
+vector<TNMObject> topjetsMasstag;
+vector<TNMObject> leptonsSel;
+vector<TNMObject> topjetsMasstag0b;
+vector<TNMObject> topjetsAntitag;
+vector<TNMObject> topjets;
 
 
 // object definitions
-struct object_taus_veto_s : public TNMThing
+struct object_photons_s : public TNMThing
 {
-  object_taus_veto_s() : TNMThing() {}
-  ~object_taus_veto_s() {}
+  object_photons_s() : TNMThing() {}
+  ~object_photons_s() {}
   bool create()
   {
-    taus_veto.clear();
+    photons.clear();
 
-    // note: o and Tau are the same object
-    vector<TNMObject>& o = Tau;
+    // note: o and Photon are the same object
+    vector<TNMObject>& o = Photon;
 
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
-        if ( !(p("pt") > 18) ) continue;
+        if ( !(p("pt") > 80) ) continue;
         if ( !(p("|eta|") < 2.5) ) continue;
-        if ( !(p("idMVAnewDM2017v2") >= 4) ) continue;
-        taus_veto.push_back(p);
+        photons.push_back(p);
       }
   return true;
   };
-} object_taus_veto;
-
-struct object_electrons_sel_s : public TNMThing
-{
-  object_electrons_sel_s() : TNMThing() {}
-  ~object_electrons_sel_s() {}
-  bool create()
-  {
-    electrons_sel.clear();
-
-    // note: o and Electron are the same object
-    vector<TNMObject>& o = Electron;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        if ( !(p("pt") > 10) ) continue;
-        if ( !(p("|eta|") < 2.5) ) continue;
-        if ( !((p("|eta|") <= 1.442) ||
-		 (p("|eta|") >= 1.556)) ) continue;
-        if ( !(p("miniPFRelIso_all") < 0.1) ) continue;
-        if ( !(p("|dxy|") < 0.05) ) continue;
-        if ( !(p("|dz|") < 0.1) ) continue;
-        electrons_sel.push_back(p);
-      }
-  return true;
-  };
-} object_electrons_sel;
+} object_photons;
 
 struct object_AK8jets_s : public TNMThing
 {
@@ -210,13 +183,87 @@ struct object_AK8jets_s : public TNMThing
   };
 } object_AK8jets;
 
-struct object_muons_sel_s : public TNMThing
+struct object_tausVeto_s : public TNMThing
 {
-  object_muons_sel_s() : TNMThing() {}
-  ~object_muons_sel_s() {}
+  object_tausVeto_s() : TNMThing() {}
+  ~object_tausVeto_s() {}
   bool create()
   {
-    muons_sel.clear();
+    tausVeto.clear();
+
+    // note: o and Tau are the same object
+    vector<TNMObject>& o = Tau;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !(p("pt") > 18) ) continue;
+        if ( !(p("|eta|") < 2.5) ) continue;
+        if ( !(p("idMVAnewDM2017v2") >= 4) ) continue;
+        tausVeto.push_back(p);
+      }
+  return true;
+  };
+} object_tausVeto;
+
+struct object_electronsVeto_s : public TNMThing
+{
+  object_electronsVeto_s() : TNMThing() {}
+  ~object_electronsVeto_s() {}
+  bool create()
+  {
+    electronsVeto.clear();
+
+    // note: o and Electron are the same object
+    vector<TNMObject>& o = Electron;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !(p("pt") > 5) ) continue;
+        if ( !(p("|eta|") < 2.5) ) continue;
+        if ( !(p("miniPFRelIso_all") < 0.1) ) continue;
+        if ( !(p("|dxy|") < 0.05) ) continue;
+        if ( !(p("|dz|") < 0.1) ) continue;
+        electronsVeto.push_back(p);
+      }
+  return true;
+  };
+} object_electronsVeto;
+
+struct object_muonsVeto_s : public TNMThing
+{
+  object_muonsVeto_s() : TNMThing() {}
+  ~object_muonsVeto_s() {}
+  bool create()
+  {
+    muonsVeto.clear();
+
+    // note: o and Muon are the same object
+    vector<TNMObject>& o = Muon;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !(p("pt") > 5) ) continue;
+        if ( !(p("|eta|") < 2.4) ) continue;
+        if ( !(p("softId") == 1) ) continue;
+        if ( !(p("miniPFRelIso_all") < 0.2) ) continue;
+        if ( !(p("|dxy|") < 0.2) ) continue;
+        if ( !(p("|dz|") < 0.5) ) continue;
+        muonsVeto.push_back(p);
+      }
+  return true;
+  };
+} object_muonsVeto;
+
+struct object_muonsSel_s : public TNMThing
+{
+  object_muonsSel_s() : TNMThing() {}
+  ~object_muonsSel_s() {}
+  bool create()
+  {
+    muonsSel.clear();
 
     // note: o and Muon are the same object
     vector<TNMObject>& o = Muon;
@@ -229,23 +276,11 @@ struct object_muons_sel_s : public TNMThing
         if ( !(p("miniPFRelIso_all") < 0.15) ) continue;
         if ( !(p("|dxy|") < 0.05) ) continue;
         if ( !(p("|dz|") < 0.1) ) continue;
-        muons_sel.push_back(p);
+        muonsSel.push_back(p);
       }
   return true;
   };
-} object_muons_sel;
-
-struct object_met_s : public TNMThing
-{
-  object_met_s() : TNMThing() {}
-  ~object_met_s() {}
-  bool create()
-  {
-    // singleton object
-    met = MET;
-  return true;
-  };
-} object_met;
+} object_muonsSel;
 
 struct object_AK4jets_s : public TNMThing
 {
@@ -269,13 +304,25 @@ struct object_AK4jets_s : public TNMThing
   };
 } object_AK4jets;
 
-struct object_electrons_veto_s : public TNMThing
+struct object_met_s : public TNMThing
 {
-  object_electrons_veto_s() : TNMThing() {}
-  ~object_electrons_veto_s() {}
+  object_met_s() : TNMThing() {}
+  ~object_met_s() {}
   bool create()
   {
-    electrons_veto.clear();
+    // singleton object
+    met = MET;
+  return true;
+  };
+} object_met;
+
+struct object_electronsSel_s : public TNMThing
+{
+  object_electronsSel_s() : TNMThing() {}
+  ~object_electronsSel_s() {}
+  bool create()
+  {
+    electronsSel.clear();
 
     // note: o and Electron are the same object
     vector<TNMObject>& o = Electron;
@@ -283,64 +330,47 @@ struct object_electrons_veto_s : public TNMThing
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
-        if ( !(p("pt") > 5) ) continue;
+        if ( !(p("pt") > 10) ) continue;
         if ( !(p("|eta|") < 2.5) ) continue;
+        if ( !((p("|eta|") <= 1.442) ||
+		 (p("|eta|") >= 1.556)) ) continue;
         if ( !(p("miniPFRelIso_all") < 0.1) ) continue;
         if ( !(p("|dxy|") < 0.05) ) continue;
         if ( !(p("|dz|") < 0.1) ) continue;
-        electrons_veto.push_back(p);
+        electronsSel.push_back(p);
       }
   return true;
   };
-} object_electrons_veto;
+} object_electronsSel;
 
-struct object_muons_veto_s : public TNMThing
+struct object_AK4jetsNopho_s : public TNMThing
 {
-  object_muons_veto_s() : TNMThing() {}
-  ~object_muons_veto_s() {}
+  object_AK4jetsNopho_s() : TNMThing() {}
+  ~object_AK4jetsNopho_s() {}
   bool create()
   {
-    muons_veto.clear();
+    AK4jetsNopho.clear();
 
-    // note: o and Muon are the same object
-    vector<TNMObject>& o = Muon;
+    // note: o and AK4jets are the same object
+    vector<TNMObject>& o = AK4jets;
 
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
-        if ( !(p("pt") > 5) ) continue;
-        if ( !(p("|eta|") < 2.4) ) continue;
-        if ( !(p("softId") == 1) ) continue;
-        if ( !(p("miniPFRelIso_all") < 0.2) ) continue;
-        if ( !(p("|dxy|") < 0.2) ) continue;
-        if ( !(p("|dz|") < 0.5) ) continue;
-        muons_veto.push_back(p);
+        TNMObject& j = p;
+        TNMBool cut1(photons.size());
+        for(size_t n=0; n < photons.size(); n++)
+          {
+            cut1[n] = _dR(j, photons[n]) < 0.4  &&
+		 (photons[n]("pt")/j("pt") >= 0.5) &&
+		 (photons[n]("pt")/j("pt") <= 2.0);
+          }
+        if ( (cut1.OR()) ) continue;
+        AK4jetsNopho.push_back(p);
       }
   return true;
   };
-} object_muons_veto;
-
-struct object_photons_s : public TNMThing
-{
-  object_photons_s() : TNMThing() {}
-  ~object_photons_s() {}
-  bool create()
-  {
-    photons.clear();
-
-    // note: o and Photon are the same object
-    vector<TNMObject>& o = Photon;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        if ( !(p("pt") > 80) ) continue;
-        if ( !(p("|eta|") < 2.5) ) continue;
-        photons.push_back(p);
-      }
-  return true;
-  };
-} object_photons;
+} object_AK4jetsNopho;
 
 struct object_megajets_s : public TNMThing
 {
@@ -360,13 +390,137 @@ struct object_megajets_s : public TNMThing
   };
 } object_megajets;
 
-struct object_bjets_loose_s : public TNMThing
+struct object_WjetsMasstag_s : public TNMThing
 {
-  object_bjets_loose_s() : TNMThing() {}
-  ~object_bjets_loose_s() {}
+  object_WjetsMasstag_s() : TNMThing() {}
+  ~object_WjetsMasstag_s() {}
   bool create()
   {
-    bjets_loose.clear();
+    WjetsMasstag.clear();
+
+    // note: o and AK8jets are the same object
+    vector<TNMObject>& o = AK8jets;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !((p("msoftdrop") >= 65) &&
+		 (p("msoftdrop") <= 105)) ) continue;
+        WjetsMasstag.push_back(p);
+      }
+  return true;
+  };
+} object_WjetsMasstag;
+
+struct object_WjetsAntitag_s : public TNMThing
+{
+  object_WjetsAntitag_s() : TNMThing() {}
+  ~object_WjetsAntitag_s() {}
+  bool create()
+  {
+    WjetsAntitag.clear();
+
+    // note: o and WjetsMasstag are the same object
+    vector<TNMObject>& o = WjetsMasstag;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !(p("tau2") / p("tau1") > 0.4) ) continue;
+        WjetsAntitag.push_back(p);
+      }
+  return true;
+  };
+} object_WjetsAntitag;
+
+struct object_bjetsTight_s : public TNMThing
+{
+  object_bjetsTight_s() : TNMThing() {}
+  ~object_bjetsTight_s() {}
+  bool create()
+  {
+    bjetsTight.clear();
+
+    // note: o and AK4jets are the same object
+    vector<TNMObject>& o = AK4jets;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !(p("btagDeepB") > 0.8001) ) continue;
+        bjetsTight.push_back(p);
+      }
+  return true;
+  };
+} object_bjetsTight;
+
+struct object_megajetsNopho_s : public TNMThing
+{
+  object_megajetsNopho_s() : TNMThing() {}
+  ~object_megajetsNopho_s() {}
+  bool create()
+  {
+    megajetsNopho.clear();
+    vector<TNMObject> o = _fmegajets(AK4jetsNopho);
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        megajetsNopho.push_back(p);
+      }
+  return true;
+  };
+} object_megajetsNopho;
+
+struct object_bjetsMedium_s : public TNMThing
+{
+  object_bjetsMedium_s() : TNMThing() {}
+  ~object_bjetsMedium_s() {}
+  bool create()
+  {
+    bjetsMedium.clear();
+
+    // note: o and AK4jets are the same object
+    vector<TNMObject>& o = AK4jets;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !(p("btagDeepB") > 0.4941) ) continue;
+        bjetsMedium.push_back(p);
+      }
+  return true;
+  };
+} object_bjetsMedium;
+
+struct object_Wjets_s : public TNMThing
+{
+  object_Wjets_s() : TNMThing() {}
+  ~object_Wjets_s() {}
+  bool create()
+  {
+    Wjets.clear();
+
+    // note: o and WjetsMasstag are the same object
+    vector<TNMObject>& o = WjetsMasstag;
+
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        if ( !(p("tau2") / p("tau1") <= 0.4) ) continue;
+        Wjets.push_back(p);
+      }
+  return true;
+  };
+} object_Wjets;
+
+struct object_bjetsLoose_s : public TNMThing
+{
+  object_bjetsLoose_s() : TNMThing() {}
+  ~object_bjetsLoose_s() {}
+  bool create()
+  {
+    bjetsLoose.clear();
 
     // note: o and AK4jets are the same object
     vector<TNMObject>& o = AK4jets;
@@ -375,19 +529,47 @@ struct object_bjets_loose_s : public TNMThing
       {
         TNMObject& p = o[c];
         if ( !(p("btagDeepB") > 0.152) ) continue;
-        bjets_loose.push_back(p);
+        bjetsLoose.push_back(p);
       }
   return true;
   };
-} object_bjets_loose;
+} object_bjetsLoose;
 
-struct object_topjets_masstag_s : public TNMThing
+struct object_leptonsVeto_s : public TNMThing
 {
-  object_topjets_masstag_s() : TNMThing() {}
-  ~object_topjets_masstag_s() {}
+  object_leptonsVeto_s() : TNMThing() {}
+  ~object_leptonsVeto_s() {}
   bool create()
   {
-    topjets_masstag.clear();
+    leptonsVeto.clear();
+    // concatenate vectors
+    vector<TNMObject> o;
+    for(size_t n=0; n < electronsVeto.size(); n++)
+      {
+        o.push_back(electronsVeto[n]);
+      }
+    for(size_t n=0; n < muonsVeto.size(); n++)
+      {
+        o.push_back(muonsVeto[n]);
+      }
+    
+    for(size_t c=0; c < o.size(); c++)
+      {
+        TNMObject& p = o[c];
+        leptonsVeto.push_back(p);
+      }
+    sort(leptonsVeto.begin(), leptonsVeto.end());
+  return true;
+  };
+} object_leptonsVeto;
+
+struct object_topjetsMasstag_s : public TNMThing
+{
+  object_topjetsMasstag_s() : TNMThing() {}
+  ~object_topjetsMasstag_s() {}
+  bool create()
+  {
+    topjetsMasstag.clear();
 
     // note: o and AK8jets are the same object
     vector<TNMObject>& o = AK8jets;
@@ -398,179 +580,82 @@ struct object_topjets_masstag_s : public TNMThing
         if ( !(p("pt") > 400) ) continue;
         if ( !((p("msoftdrop") >= 105) &&
 		 (p("msoftdrop") <= 210)) ) continue;
-        topjets_masstag.push_back(p);
+        topjetsMasstag.push_back(p);
       }
   return true;
   };
-} object_topjets_masstag;
+} object_topjetsMasstag;
 
-struct object_bjets_medium_s : public TNMThing
+struct object_leptonsSel_s : public TNMThing
 {
-  object_bjets_medium_s() : TNMThing() {}
-  ~object_bjets_medium_s() {}
+  object_leptonsSel_s() : TNMThing() {}
+  ~object_leptonsSel_s() {}
   bool create()
   {
-    bjets_medium.clear();
-
-    // note: o and AK4jets are the same object
-    vector<TNMObject>& o = AK4jets;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        if ( !(p("btagDeepB") > 0.4941) ) continue;
-        bjets_medium.push_back(p);
-      }
-  return true;
-  };
-} object_bjets_medium;
-
-struct object_jets_0pho_s : public TNMThing
-{
-  object_jets_0pho_s() : TNMThing() {}
-  ~object_jets_0pho_s() {}
-  bool create()
-  {
-    jets_0pho.clear();
-
-    // note: o and AK4jets are the same object
-    vector<TNMObject>& o = AK4jets;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        TNMObject& j = p;
-        TNMBool cut1(photons.size());
-        for(size_t n=0; n < photons.size(); n++)
-          {
-            cut1[n] = _dR(j, photons[n]) < 0.4  &&
-		 (photons[n]("pt")/j("pt") >= 0.5) &&
-		 (photons[n]("pt")/j("pt") <= 2.0);
-          }
-        if ( (cut1.OR()) ) continue;
-        jets_0pho.push_back(p);
-      }
-  return true;
-  };
-} object_jets_0pho;
-
-struct object_leptons_veto_s : public TNMThing
-{
-  object_leptons_veto_s() : TNMThing() {}
-  ~object_leptons_veto_s() {}
-  bool create()
-  {
+    leptonsSel.clear();
     // concatenate vectors
     vector<TNMObject> o;
-    for(size_t n=0; n < electrons_veto.size(); n++)
+    for(size_t n=0; n < electronsSel.size(); n++)
       {
-        o.push_back(electrons_veto[n]);
+        o.push_back(electronsSel[n]);
       }
-    for(size_t n=0; n < muons_veto.size(); n++)
+    for(size_t n=0; n < muonsSel.size(); n++)
       {
-        o.push_back(muons_veto[n]);
+        o.push_back(muonsSel[n]);
       }
     
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
-        leptons_veto.push_back(p);
+        leptonsSel.push_back(p);
       }
-    sort(leptons_veto.begin(), leptons_veto.end());
+    sort(leptonsSel.begin(), leptonsSel.end());
   return true;
   };
-} object_leptons_veto;
+} object_leptonsSel;
 
-struct object_leptons_sel_s : public TNMThing
+struct object_topjetsMasstag0b_s : public TNMThing
 {
-  object_leptons_sel_s() : TNMThing() {}
-  ~object_leptons_sel_s() {}
+  object_topjetsMasstag0b_s() : TNMThing() {}
+  ~object_topjetsMasstag0b_s() {}
   bool create()
   {
-    // concatenate vectors
-    vector<TNMObject> o;
-    for(size_t n=0; n < electrons_sel.size(); n++)
-      {
-        o.push_back(electrons_sel[n]);
-      }
-    for(size_t n=0; n < muons_sel.size(); n++)
-      {
-        o.push_back(muons_sel[n]);
-      }
-    
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        leptons_sel.push_back(p);
-      }
-    sort(leptons_sel.begin(), leptons_sel.end());
-  return true;
-  };
-} object_leptons_sel;
+    topjetsMasstag0b.clear();
 
-struct object_bjets_tight_s : public TNMThing
-{
-  object_bjets_tight_s() : TNMThing() {}
-  ~object_bjets_tight_s() {}
-  bool create()
-  {
-    bjets_tight.clear();
-
-    // note: o and AK4jets are the same object
-    vector<TNMObject>& o = AK4jets;
+    // note: o and topjetsMasstag are the same object
+    vector<TNMObject>& o = topjetsMasstag;
 
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
-        if ( !(p("btagDeepB") > 0.8001) ) continue;
-        bjets_tight.push_back(p);
+        if ( !(p("btagDeepB") < 0.1522) ) continue;
+        topjetsMasstag0b.push_back(p);
       }
   return true;
   };
-} object_bjets_tight;
+} object_topjetsMasstag0b;
 
-struct object_Wjets_masstag_s : public TNMThing
+struct object_topjetsAntitag_s : public TNMThing
 {
-  object_Wjets_masstag_s() : TNMThing() {}
-  ~object_Wjets_masstag_s() {}
+  object_topjetsAntitag_s() : TNMThing() {}
+  ~object_topjetsAntitag_s() {}
   bool create()
   {
-    Wjets_masstag.clear();
+    topjetsAntitag.clear();
 
-    // note: o and AK8jets are the same object
-    vector<TNMObject>& o = AK8jets;
+    // note: o and topjetsMasstag are the same object
+    vector<TNMObject>& o = topjetsMasstag;
 
     for(size_t c=0; c < o.size(); c++)
       {
         TNMObject& p = o[c];
-        if ( !((p("msoftdrop") >= 65) &&
-		 (p("msoftdrop") <= 105)) ) continue;
-        Wjets_masstag.push_back(p);
+        if ( !(p("btagDeepB") < 0.1522) ) continue;
+        if ( !(p("tau3") / p("tau2") >= 0.46) ) continue;
+        topjetsAntitag.push_back(p);
       }
   return true;
   };
-} object_Wjets_masstag;
-
-struct object_Wjets_antitag_s : public TNMThing
-{
-  object_Wjets_antitag_s() : TNMThing() {}
-  ~object_Wjets_antitag_s() {}
-  bool create()
-  {
-    Wjets_antitag.clear();
-
-    // note: o and Wjets_masstag are the same object
-    vector<TNMObject>& o = Wjets_masstag;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        if ( !(p("tau2") / p("tau1") > 0.4) ) continue;
-        Wjets_antitag.push_back(p);
-      }
-  return true;
-  };
-} object_Wjets_antitag;
+} object_topjetsAntitag;
 
 struct object_topjets_s : public TNMThing
 {
@@ -580,8 +665,8 @@ struct object_topjets_s : public TNMThing
   {
     topjets.clear();
 
-    // note: o and topjets_masstag are the same object
-    vector<TNMObject>& o = topjets_masstag;
+    // note: o and topjetsMasstag are the same object
+    vector<TNMObject>& o = topjetsMasstag;
 
     for(size_t c=0; c < o.size(); c++)
       {
@@ -594,73 +679,31 @@ struct object_topjets_s : public TNMThing
   };
 } object_topjets;
 
-struct object_topjets_antitag_s : public TNMThing
-{
-  object_topjets_antitag_s() : TNMThing() {}
-  ~object_topjets_antitag_s() {}
-  bool create()
-  {
-    topjets_antitag.clear();
-
-    // note: o and topjets_masstag are the same object
-    vector<TNMObject>& o = topjets_masstag;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        if ( !(p("btagDeepB") < 0.1522) ) continue;
-        if ( !(p("tau3") / p("tau2") >= 0.46) ) continue;
-        topjets_antitag.push_back(p);
-      }
-  return true;
-  };
-} object_topjets_antitag;
-
-struct object_topjets_masstag_0b_s : public TNMThing
-{
-  object_topjets_masstag_0b_s() : TNMThing() {}
-  ~object_topjets_masstag_0b_s() {}
-  bool create()
-  {
-    topjets_masstag_0b.clear();
-
-    // note: o and topjets_masstag are the same object
-    vector<TNMObject>& o = topjets_masstag;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        if ( !(p("btagDeepB") < 0.1522) ) continue;
-        topjets_masstag_0b.push_back(p);
-      }
-  return true;
-  };
-} object_topjets_masstag_0b;
-
-struct object_Wjets_s : public TNMThing
-{
-  object_Wjets_s() : TNMThing() {}
-  ~object_Wjets_s() {}
-  bool create()
-  {
-    Wjets.clear();
-
-    // note: o and Wjets_masstag are the same object
-    vector<TNMObject>& o = Wjets_masstag;
-
-    for(size_t c=0; c < o.size(); c++)
-      {
-        TNMObject& p = o[c];
-        if ( !(p("tau2") / p("tau1") <= 0.4) ) continue;
-        Wjets.push_back(p);
-      }
-  return true;
-  };
-} object_Wjets;
-
 
 //------------------------------------------------------------------
 // defines (aliases)
+
+struct MRNopho_s : public TNMThing
+{
+  MRNopho_s() : TNMThing(), done(false) {}
+  ~MRNopho_s() {}
+  void reset() { done = false; }
+  operator float()
+  {
+    if ( done )
+      {
+        return value;
+      }
+    else
+      {
+        done  = true;
+        value = _fMR(megajetsNopho);
+        return value;
+      }
+  }
+  bool done;
+  float value;
+} MRNopho;
 
 struct METpho_s : public TNMThing
 {
@@ -684,6 +727,28 @@ struct METpho_s : public TNMThing
   TNMObject value;
 } METpho;
 
+struct dphimegajetsNopho_s : public TNMThing
+{
+  dphimegajetsNopho_s() : TNMThing(), done(false) {}
+  ~dphimegajetsNopho_s() {}
+  void reset() { done = false; }
+  operator float()
+  {
+    if ( done )
+      {
+        return value;
+      }
+    else
+      {
+        done  = true;
+        value = _dPhi(megajetsNopho[0], megajetsNopho[1]);
+        return value;
+      }
+  }
+  bool done;
+  float value;
+} dphimegajetsNopho;
+
 struct METl_s : public TNMThing
 {
   METl_s() : TNMThing(), done(false) {}
@@ -698,7 +763,7 @@ struct METl_s : public TNMThing
     else
       {
         done  = true;
-        value = met + leptons_veto[0];
+        value = met + leptonsVeto[0];
         return value;
       }
   }
@@ -720,57 +785,13 @@ struct METll_s : public TNMThing
     else
       {
         done  = true;
-        value = met + leptons_veto[0] + leptons_veto[1];
+        value = met + leptonsVeto[0] + leptonsVeto[1];
         return value;
       }
   }
   bool done;
   TNMObject value;
 } METll;
-
-struct Mll_s : public TNMThing
-{
-  Mll_s() : TNMThing(), done(false) {}
-  ~Mll_s() {}
-  void reset() { done = false; }
-  operator float()
-  {
-    if ( done )
-      {
-        return value;
-      }
-    else
-      {
-        done  = true;
-        value = _fMll(leptons_sel[0], leptons_sel[1]);
-        return value;
-      }
-  }
-  bool done;
-  float value;
-} Mll;
-
-struct MT_s : public TNMThing
-{
-  MT_s() : TNMThing(), done(false) {}
-  ~MT_s() {}
-  void reset() { done = false; }
-  operator float()
-  {
-    if ( done )
-      {
-        return value;
-      }
-    else
-      {
-        done  = true;
-        value = _fMT(leptons_veto[0], met);
-        return value;
-      }
-  }
-  bool done;
-  float value;
-} MT;
 
 struct MR_s : public TNMThing
 {
@@ -794,6 +815,50 @@ struct MR_s : public TNMThing
   float value;
 } MR;
 
+struct Mll_s : public TNMThing
+{
+  Mll_s() : TNMThing(), done(false) {}
+  ~Mll_s() {}
+  void reset() { done = false; }
+  operator float()
+  {
+    if ( done )
+      {
+        return value;
+      }
+    else
+      {
+        done  = true;
+        value = _fMll(leptonsSel[0], leptonsSel[1]);
+        return value;
+      }
+  }
+  bool done;
+  float value;
+} Mll;
+
+struct MT_s : public TNMThing
+{
+  MT_s() : TNMThing(), done(false) {}
+  ~MT_s() {}
+  void reset() { done = false; }
+  operator float()
+  {
+    if ( done )
+      {
+        return value;
+      }
+    else
+      {
+        done  = true;
+        value = _fMT(leptonsVeto[0], met);
+        return value;
+      }
+  }
+  bool done;
+  float value;
+} MT;
+
 struct dphimegajets_s : public TNMThing
 {
   dphimegajets_s() : TNMThing(), done(false) {}
@@ -816,32 +881,10 @@ struct dphimegajets_s : public TNMThing
   float value;
 } dphimegajets;
 
-struct R2ll_s : public TNMThing
+struct Rsq_s : public TNMThing
 {
-  R2ll_s() : TNMThing(), done(false) {}
-  ~R2ll_s() {}
-  void reset() { done = false; }
-  operator float()
-  {
-    if ( done )
-      {
-        return value;
-      }
-    else
-      {
-        done  = true;
-        value = sqrt(_fMTR(megajets, (TNMObject&)METll) / MR);
-        return value;
-      }
-  }
-  bool done;
-  float value;
-} R2ll;
-
-struct R2_s : public TNMThing
-{
-  R2_s() : TNMThing(), done(false) {}
-  ~R2_s() {}
+  Rsq_s() : TNMThing(), done(false) {}
+  ~Rsq_s() {}
   void reset() { done = false; }
   operator float()
   {
@@ -858,12 +901,56 @@ struct R2_s : public TNMThing
   }
   bool done;
   float value;
-} R2;
+} Rsq;
 
-struct R2l_s : public TNMThing
+struct Rsqpho_s : public TNMThing
 {
-  R2l_s() : TNMThing(), done(false) {}
-  ~R2l_s() {}
+  Rsqpho_s() : TNMThing(), done(false) {}
+  ~Rsqpho_s() {}
+  void reset() { done = false; }
+  operator float()
+  {
+    if ( done )
+      {
+        return value;
+      }
+    else
+      {
+        done  = true;
+        value = sqrt(_fMTR(megajetsNopho, (TNMObject&)METpho) / MRNopho);
+        return value;
+      }
+  }
+  bool done;
+  float value;
+} Rsqpho;
+
+struct Rsqll_s : public TNMThing
+{
+  Rsqll_s() : TNMThing(), done(false) {}
+  ~Rsqll_s() {}
+  void reset() { done = false; }
+  operator float()
+  {
+    if ( done )
+      {
+        return value;
+      }
+    else
+      {
+        done  = true;
+        value = sqrt(_fMTR(megajets, (TNMObject&)METll) / MR);
+        return value;
+      }
+  }
+  bool done;
+  float value;
+} Rsqll;
+
+struct Rsql_s : public TNMThing
+{
+  Rsql_s() : TNMThing(), done(false) {}
+  ~Rsql_s() {}
   void reset() { done = false; }
   operator float()
   {
@@ -880,11 +967,11 @@ struct R2l_s : public TNMThing
   }
   bool done;
   float value;
-} R2l;
+} Rsql;
 
 //------------------------------------------------------------------
 // regions
-struct region_W_L_s : public TNMThing
+struct region_TopcategoryCRL_s : public TNMThing
 {
   std::string name;
   double total;
@@ -896,9 +983,9 @@ struct region_W_L_s : public TNMThing
 
   int    ncuts;
 
-  region_W_L_s()
+  region_TopcategoryCRL_s()
     : TNMThing(),
-      name("W_L"),
+      name("TopcategoryCRL"),
       total(0),
       dtotal(0),
       hcount(0),
@@ -907,7 +994,7 @@ struct region_W_L_s : public TNMThing
       weight(1),
       ncuts(9)
   {
-    hcount = new TH1F("cutflow_W_L", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_TopcategoryCRL", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
@@ -916,15 +1003,15 @@ struct region_W_L_s : public TNMThing
     hcount->Fill("AK4jets.size >= 3", 0);
     hcount->Fill("AK8jets.size >= 1", 0);
     hcount->Fill("MR > 800", 0);
-    hcount->Fill("leptonsveto.size == 1", 0);
-    hcount->Fill("R2l > 0.08", 0);
-    hcount->Fill("bjetsloose.size == 0", 0);
-    hcount->Fill("Wjetsmasstag.size >= 1", 0);
+    hcount->Fill("leptonsVeto.size == 1", 0);
+    hcount->Fill("Rsql > 0.08", 0);
+    hcount->Fill("topjetsMasstag0b.size >= 1", 0);
     hcount->Fill("dphimegajets < 2.8", 0);
     hcount->Fill("MT [] 30 100", 0);
+    hcount->Fill("bjetsLoose.size == 0", 0);
   }
 
-  ~region_W_L_s() {}
+  ~region_TopcategoryCRL_s() {}
 
   void summary(std::ostream& os)
   {
@@ -967,17 +1054,14 @@ struct region_W_L_s : public TNMThing
     if ( !(MR > 800) ) return false;
     count("MR > 800");
 
-    if ( !(leptons_veto.size() == 1) ) return false;
-    count("leptons_veto.size == 1");
+    if ( !(leptonsVeto.size() == 1) ) return false;
+    count("leptonsVeto.size == 1");
 
-    if ( !(R2l > 0.08) ) return false;
-    count("R2l > 0.08");
+    if ( !(Rsql > 0.08) ) return false;
+    count("Rsql > 0.08");
 
-    if ( !(bjets_loose.size() == 0) ) return false;
-    count("bjets_loose.size == 0");
-
-    if ( !(Wjets_masstag.size() >= 1) ) return false;
-    count("Wjets_masstag.size >= 1");
+    if ( !(topjetsMasstag0b.size() >= 1) ) return false;
+    count("topjetsMasstag0b.size >= 1");
 
     if ( !(dphimegajets < 2.8) ) return false;
     count("dphimegajets < 2.8");
@@ -986,6 +1070,9 @@ struct region_W_L_s : public TNMThing
 		 (MT <= 100)) ) return false;
     count("MT [] 30 100");
 
+    if ( !(bjetsLoose.size() == 0) ) return false;
+    count("bjetsLoose.size == 0");
+
     total  += weight;
     dtotal += weight * weight;
 
@@ -993,9 +1080,9 @@ struct region_W_L_s : public TNMThing
     result  = true;
     return true;
   }
-} region_W_L;
+} region_TopcategoryCRL;
 
-struct region_W_G_s : public TNMThing
+struct region_WcategoryCRZ_s : public TNMThing
 {
   std::string name;
   double total;
@@ -1007,18 +1094,18 @@ struct region_W_G_s : public TNMThing
 
   int    ncuts;
 
-  region_W_G_s()
+  region_WcategoryCRZ_s()
     : TNMThing(),
-      name("W_G"),
+      name("WcategoryCRZ"),
       total(0),
       dtotal(0),
       hcount(0),
       done(false),
       result(false),
       weight(1),
-      ncuts(7)
+      ncuts(9)
   {
-    hcount = new TH1F("cutflow_W_G", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_WcategoryCRZ", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
@@ -1026,14 +1113,16 @@ struct region_W_G_s : public TNMThing
     hcount->Fill("none", 0);
     hcount->Fill("AK4jets.size >= 3", 0);
     hcount->Fill("AK8jets.size >= 1", 0);
-    hcount->Fill("leptonsveto.size == 0", 0);
-    hcount->Fill("tausveto.size == 0", 0);
-    hcount->Fill("photons.size == 1", 0);
-    hcount->Fill("Wjetsmasstag.size >= 1", 0);
+    hcount->Fill("MR > 800", 0);
+    hcount->Fill("(muonsSel.size == 2 and electronsVeto.size == 0) or (electronsSel.size == 2 and muonsVeto.size == 0)", 0);
+    hcount->Fill("leptonsSel[0].charge + leptonsSel[1].charge == 0", 0);
+    hcount->Fill("fMll(leptonsSel[0], leptonsSel[1]) < 10", 0);
+    hcount->Fill("Rsqll > 0.08", 0);
+    hcount->Fill("WjetsMasstag.size >= 1", 0);
     hcount->Fill("dphimegajets < 2.8", 0);
   }
 
-  ~region_W_G_s() {}
+  ~region_WcategoryCRZ_s() {}
 
   void summary(std::ostream& os)
   {
@@ -1073,133 +1162,252 @@ struct region_W_G_s : public TNMThing
     if ( !(AK8jets.size() >= 1) ) return false;
     count("AK8jets.size >= 1");
 
-    if ( !(leptons_veto.size() == 0) ) return false;
-    count("leptons_veto.size == 0");
+    if ( !(MR > 800) ) return false;
+    count("MR > 800");
 
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
+    if ( !((muonsSel.size() == 2  &&
+		  electronsVeto.size() == 0)  ||
+		  (electronsSel.size() == 2  &&
+		  muonsVeto.size() == 0)) ) return false;
+    count("(muonsSel.size == 2 and electronsVeto.size == 0) or (electronsSel.size == 2 and muonsVeto.size == 0)");
+
+    if ( !(leptonsSel[0]("charge") + leptonsSel[1]("charge") == 0) ) return false;
+    count("leptonsSel[0].charge + leptonsSel[1].charge == 0");
+
+    if ( !(_fMll(leptonsSel[0], leptonsSel[1]) < 10) ) return false;
+    count("fMll(leptonsSel[0], leptonsSel[1]) < 10");
+
+    if ( !(Rsqll > 0.08) ) return false;
+    count("Rsqll > 0.08");
+
+    if ( !(WjetsMasstag.size() >= 1) ) return false;
+    count("WjetsMasstag.size >= 1");
+
+    if ( !(dphimegajets < 2.8) ) return false;
+    count("dphimegajets < 2.8");
+
+    total  += weight;
+    dtotal += weight * weight;
+
+    // NB: remember to update result
+    result  = true;
+    return true;
+  }
+} region_WcategoryCRZ;
+
+struct region_TopcategoryCRZ_s : public TNMThing
+{
+  std::string name;
+  double total;
+  double dtotal;
+  TH1F*  hcount;
+  bool   done;
+  bool   result;
+  double weight;
+
+  int    ncuts;
+
+  region_TopcategoryCRZ_s()
+    : TNMThing(),
+      name("TopcategoryCRZ"),
+      total(0),
+      dtotal(0),
+      hcount(0),
+      done(false),
+      result(false),
+      weight(1),
+      ncuts(9)
+  {
+    hcount = new TH1F("cutflow_TopcategoryCRZ", "", 1, 0, 1);
+    hcount->SetCanExtend(1);
+    hcount->SetStats(0);
+    hcount->Sumw2();
+
+    hcount->Fill("none", 0);
+    hcount->Fill("AK4jets.size >= 3", 0);
+    hcount->Fill("AK8jets.size >= 1", 0);
+    hcount->Fill("MR > 800", 0);
+    hcount->Fill("(muonsSel.size == 2 and electronsVeto.size == 0) or (electronsSel.size == 2 and muonsVeto.size == 0)", 0);
+    hcount->Fill("leptonsSel[0].charge + leptonsSel[1].charge == 0", 0);
+    hcount->Fill("fMll(leptonsSel[0], leptonsSel[1]) < 10", 0);
+    hcount->Fill("Rsqll > 0.08", 0);
+    hcount->Fill("topjetsMasstag.size >= 1", 0);
+    hcount->Fill("dphimegajets < 2.8", 0);
+  }
+
+  ~region_TopcategoryCRZ_s() {}
+
+  void summary(std::ostream& os)
+  {
+    os << name << std::endl;
+    double gtotal = hcount->GetBinContent(1);
+    for(int c=0; c <= ncuts; c++)
+      {
+        double value(hcount->GetBinContent(c+1));
+        double error(hcount->GetBinError(c+1));
+        double efficiency=0;
+        if ( gtotal > 0 ) efficiency = value/gtotal;
+        char record[1024];
+        sprintf(record, 
+                " %2d %-45s:"
+                " %9.2f +/- %5.1f %6.3f",
+                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
+                value, error, efficiency);
+        os << record << std::endl;
+      }
+    os << std::endl;
+  }
+  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
+  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
+  void reset()			{ done = false; result = false; }
+  bool operator()()		{ return create(); }
+
+  bool create()
+  {
+    if ( done ) return result;
+    done   = true;
+    result = false;
+    count("none");
+
+    if ( !(AK4jets.size() >= 3) ) return false;
+    count("AK4jets.size >= 3");
+
+    if ( !(AK8jets.size() >= 1) ) return false;
+    count("AK8jets.size >= 1");
+
+    if ( !(MR > 800) ) return false;
+    count("MR > 800");
+
+    if ( !((muonsSel.size() == 2  &&
+		  electronsVeto.size() == 0)  ||
+		  (electronsSel.size() == 2  &&
+		  muonsVeto.size() == 0)) ) return false;
+    count("(muonsSel.size == 2 and electronsVeto.size == 0) or (electronsSel.size == 2 and muonsVeto.size == 0)");
+
+    if ( !(leptonsSel[0]("charge") + leptonsSel[1]("charge") == 0) ) return false;
+    count("leptonsSel[0].charge + leptonsSel[1].charge == 0");
+
+    if ( !(_fMll(leptonsSel[0], leptonsSel[1]) < 10) ) return false;
+    count("fMll(leptonsSel[0], leptonsSel[1]) < 10");
+
+    if ( !(Rsqll > 0.08) ) return false;
+    count("Rsqll > 0.08");
+
+    if ( !(topjetsMasstag.size() >= 1) ) return false;
+    count("topjetsMasstag.size >= 1");
+
+    if ( !(dphimegajets < 2.8) ) return false;
+    count("dphimegajets < 2.8");
+
+    total  += weight;
+    dtotal += weight * weight;
+
+    // NB: remember to update result
+    result  = true;
+    return true;
+  }
+} region_TopcategoryCRZ;
+
+struct region_WcategoryCRG_s : public TNMThing
+{
+  std::string name;
+  double total;
+  double dtotal;
+  TH1F*  hcount;
+  bool   done;
+  bool   result;
+  double weight;
+
+  int    ncuts;
+
+  region_WcategoryCRG_s()
+    : TNMThing(),
+      name("WcategoryCRG"),
+      total(0),
+      dtotal(0),
+      hcount(0),
+      done(false),
+      result(false),
+      weight(1),
+      ncuts(9)
+  {
+    hcount = new TH1F("cutflow_WcategoryCRG", "", 1, 0, 1);
+    hcount->SetCanExtend(1);
+    hcount->SetStats(0);
+    hcount->Sumw2();
+
+    hcount->Fill("none", 0);
+    hcount->Fill("photons.size == 1", 0);
+    hcount->Fill("AK4jetsNopho.size >= 3", 0);
+    hcount->Fill("AK8jets.size >= 1", 0);
+    hcount->Fill("leptonsVeto.size == 0", 0);
+    hcount->Fill("tausVeto.size == 0", 0);
+    hcount->Fill("MRNopho > 800", 0);
+    hcount->Fill("Rsqpho > 0.08", 0);
+    hcount->Fill("WjetsMasstag.size >= 1", 0);
+    hcount->Fill("dphimegajetsNopho < 2.8", 0);
+  }
+
+  ~region_WcategoryCRG_s() {}
+
+  void summary(std::ostream& os)
+  {
+    os << name << std::endl;
+    double gtotal = hcount->GetBinContent(1);
+    for(int c=0; c <= ncuts; c++)
+      {
+        double value(hcount->GetBinContent(c+1));
+        double error(hcount->GetBinError(c+1));
+        double efficiency=0;
+        if ( gtotal > 0 ) efficiency = value/gtotal;
+        char record[1024];
+        sprintf(record, 
+                " %2d %-45s:"
+                " %9.2f +/- %5.1f %6.3f",
+                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
+                value, error, efficiency);
+        os << record << std::endl;
+      }
+    os << std::endl;
+  }
+  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
+  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
+  void reset()			{ done = false; result = false; }
+  bool operator()()		{ return create(); }
+
+  bool create()
+  {
+    if ( done ) return result;
+    done   = true;
+    result = false;
+    count("none");
 
     if ( !(photons.size() == 1) ) return false;
     count("photons.size == 1");
 
-    if ( !(Wjets_masstag.size() >= 1) ) return false;
-    count("Wjets_masstag.size >= 1");
-
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
-
-    total  += weight;
-    dtotal += weight * weight;
-
-    // NB: remember to update result
-    result  = true;
-    return true;
-  }
-} region_W_G;
-
-struct region_W_Z_s : public TNMThing
-{
-  std::string name;
-  double total;
-  double dtotal;
-  TH1F*  hcount;
-  bool   done;
-  bool   result;
-  double weight;
-
-  int    ncuts;
-
-  region_W_Z_s()
-    : TNMThing(),
-      name("W_Z"),
-      total(0),
-      dtotal(0),
-      hcount(0),
-      done(false),
-      result(false),
-      weight(1),
-      ncuts(9)
-  {
-    hcount = new TH1F("cutflow_W_Z", "", 1, 0, 1);
-    hcount->SetCanExtend(1);
-    hcount->SetStats(0);
-    hcount->Sumw2();
-
-    hcount->Fill("none", 0);
-    hcount->Fill("AK4jets.size >= 3", 0);
-    hcount->Fill("AK8jets.size >= 1", 0);
-    hcount->Fill("MR > 800", 0);
-    hcount->Fill("(muonssel.size == 2 and electronsveto.size == 0) or (electronssel.size == 2 and muonsveto.size == 0)", 0);
-    hcount->Fill("leptonssel[0].charge + leptonssel[1].charge == 0", 0);
-    hcount->Fill("R2ll > 0.08", 0);
-    hcount->Fill("Wjetsmasstag.size >= 1", 0);
-    hcount->Fill("dphimegajets < 2.8", 0);
-    hcount->Fill("fMll(leptonssel[0], leptonssel[1]) < 10", 0);
-  }
-
-  ~region_W_Z_s() {}
-
-  void summary(std::ostream& os)
-  {
-    os << name << std::endl;
-    double gtotal = hcount->GetBinContent(1);
-    for(int c=0; c <= ncuts; c++)
-      {
-        double value(hcount->GetBinContent(c+1));
-        double error(hcount->GetBinError(c+1));
-        double efficiency=0;
-        if ( gtotal > 0 ) efficiency = value/gtotal;
-        char record[1024];
-        sprintf(record, 
-                " %2d %-45s:"
-                " %9.2f +/- %5.1f %6.3f",
-                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
-                value, error, efficiency);
-        os << record << std::endl;
-      }
-    os << std::endl;
-  }
-  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
-  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
-  void reset()			{ done = false; result = false; }
-  bool operator()()		{ return create(); }
-
-  bool create()
-  {
-    if ( done ) return result;
-    done   = true;
-    result = false;
-    count("none");
-
-    if ( !(AK4jets.size() >= 3) ) return false;
-    count("AK4jets.size >= 3");
+    if ( !(AK4jetsNopho.size() >= 3) ) return false;
+    count("AK4jetsNopho.size >= 3");
 
     if ( !(AK8jets.size() >= 1) ) return false;
     count("AK8jets.size >= 1");
 
-    if ( !(MR > 800) ) return false;
-    count("MR > 800");
+    if ( !(leptonsVeto.size() == 0) ) return false;
+    count("leptonsVeto.size == 0");
 
-    if ( !((muons_sel.size() == 2  &&
-		  electrons_veto.size() == 0)  ||
-		  (electrons_sel.size() == 2  &&
-		  muons_veto.size() == 0)) ) return false;
-    count("(muons_sel.size == 2 and electrons_veto.size == 0) or (electrons_sel.size == 2 and muons_veto.size == 0)");
+    if ( !(tausVeto.size() == 0) ) return false;
+    count("tausVeto.size == 0");
 
-    if ( !(leptons_sel[0]("charge") + leptons_sel[1]("charge") == 0) ) return false;
-    count("leptons_sel[0].charge + leptons_sel[1].charge == 0");
+    if ( !(MRNopho > 800) ) return false;
+    count("MRNopho > 800");
 
-    if ( !(R2ll > 0.08) ) return false;
-    count("R2ll > 0.08");
+    if ( !(Rsqpho > 0.08) ) return false;
+    count("Rsqpho > 0.08");
 
-    if ( !(Wjets_masstag.size() >= 1) ) return false;
-    count("Wjets_masstag.size >= 1");
+    if ( !(WjetsMasstag.size() >= 1) ) return false;
+    count("WjetsMasstag.size >= 1");
 
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
-
-    if ( !(_fMll(leptons_sel[0], leptons_sel[1]) < 10) ) return false;
-    count("fMll(leptons_sel[0], leptons_sel[1]) < 10");
+    if ( !(dphimegajetsNopho < 2.8) ) return false;
+    count("dphimegajetsNopho < 2.8");
 
     total  += weight;
     dtotal += weight * weight;
@@ -1208,9 +1416,9 @@ struct region_W_Z_s : public TNMThing
     result  = true;
     return true;
   }
-} region_W_Z;
+} region_WcategoryCRG;
 
-struct region_Top_L_s : public TNMThing
+struct region_WcategoryCRL_s : public TNMThing
 {
   std::string name;
   double total;
@@ -1222,9 +1430,9 @@ struct region_Top_L_s : public TNMThing
 
   int    ncuts;
 
-  region_Top_L_s()
+  region_WcategoryCRL_s()
     : TNMThing(),
-      name("Top_L"),
+      name("WcategoryCRL"),
       total(0),
       dtotal(0),
       hcount(0),
@@ -1233,7 +1441,7 @@ struct region_Top_L_s : public TNMThing
       weight(1),
       ncuts(9)
   {
-    hcount = new TH1F("cutflow_Top_L", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_WcategoryCRL", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
@@ -1242,15 +1450,15 @@ struct region_Top_L_s : public TNMThing
     hcount->Fill("AK4jets.size >= 3", 0);
     hcount->Fill("AK8jets.size >= 1", 0);
     hcount->Fill("MR > 800", 0);
-    hcount->Fill("leptonsveto.size == 1", 0);
-    hcount->Fill("R2l > 0.08", 0);
-    hcount->Fill("bjetsloose.size == 0", 0);
-    hcount->Fill("topjetsmasstag_0b.size >= 1", 0);
+    hcount->Fill("leptonsVeto.size == 1", 0);
+    hcount->Fill("Rsql > 0.08", 0);
+    hcount->Fill("WjetsMasstag.size >= 1", 0);
     hcount->Fill("dphimegajets < 2.8", 0);
     hcount->Fill("MT [] 30 100", 0);
+    hcount->Fill("bjetsLoose.size == 0", 0);
   }
 
-  ~region_Top_L_s() {}
+  ~region_WcategoryCRL_s() {}
 
   void summary(std::ostream& os)
   {
@@ -1293,17 +1501,14 @@ struct region_Top_L_s : public TNMThing
     if ( !(MR > 800) ) return false;
     count("MR > 800");
 
-    if ( !(leptons_veto.size() == 1) ) return false;
-    count("leptons_veto.size == 1");
+    if ( !(leptonsVeto.size() == 1) ) return false;
+    count("leptonsVeto.size == 1");
 
-    if ( !(R2l > 0.08) ) return false;
-    count("R2l > 0.08");
+    if ( !(Rsql > 0.08) ) return false;
+    count("Rsql > 0.08");
 
-    if ( !(bjets_loose.size() == 0) ) return false;
-    count("bjets_loose.size == 0");
-
-    if ( !(topjets_masstag_0b.size() >= 1) ) return false;
-    count("topjets_masstag_0b.size >= 1");
+    if ( !(WjetsMasstag.size() >= 1) ) return false;
+    count("WjetsMasstag.size >= 1");
 
     if ( !(dphimegajets < 2.8) ) return false;
     count("dphimegajets < 2.8");
@@ -1312,6 +1517,9 @@ struct region_Top_L_s : public TNMThing
 		 (MT <= 100)) ) return false;
     count("MT [] 30 100");
 
+    if ( !(bjetsLoose.size() == 0) ) return false;
+    count("bjetsLoose.size == 0");
+
     total  += weight;
     dtotal += weight * weight;
 
@@ -1319,7 +1527,7 @@ struct region_Top_L_s : public TNMThing
     result  = true;
     return true;
   }
-} region_Top_L;
+} region_WcategoryCRL;
 
 struct region_preselection_s : public TNMThing
 {
@@ -1353,7 +1561,7 @@ struct region_preselection_s : public TNMThing
     hcount->Fill("AK4jets.size >= 3", 0);
     hcount->Fill("AK8jets.size >= 1", 0);
     hcount->Fill("MR > 800", 0);
-    hcount->Fill("R2 > 0.08", 0);
+    hcount->Fill("Rsq > 0.08", 0);
   }
 
   ~region_preselection_s() {}
@@ -1399,8 +1607,8 @@ struct region_preselection_s : public TNMThing
     if ( !(MR > 800) ) return false;
     count("MR > 800");
 
-    if ( !(R2 > 0.08) ) return false;
-    count("R2 > 0.08");
+    if ( !(Rsq > 0.08) ) return false;
+    count("Rsq > 0.08");
 
     total  += weight;
     dtotal += weight * weight;
@@ -1411,7 +1619,7 @@ struct region_preselection_s : public TNMThing
   }
 } region_preselection;
 
-struct region_Top_G_s : public TNMThing
+struct region_TopcategoryCRG_s : public TNMThing
 {
   std::string name;
   double total;
@@ -1423,111 +1631,9 @@ struct region_Top_G_s : public TNMThing
 
   int    ncuts;
 
-  region_Top_G_s()
+  region_TopcategoryCRG_s()
     : TNMThing(),
-      name("Top_G"),
-      total(0),
-      dtotal(0),
-      hcount(0),
-      done(false),
-      result(false),
-      weight(1),
-      ncuts(7)
-  {
-    hcount = new TH1F("cutflow_Top_G", "", 1, 0, 1);
-    hcount->SetCanExtend(1);
-    hcount->SetStats(0);
-    hcount->Sumw2();
-
-    hcount->Fill("none", 0);
-    hcount->Fill("AK4jets.size >= 3", 0);
-    hcount->Fill("AK8jets.size >= 1", 0);
-    hcount->Fill("leptonsveto.size == 0", 0);
-    hcount->Fill("tausveto.size == 0", 0);
-    hcount->Fill("photons.size == 1", 0);
-    hcount->Fill("topjetsmasstag.size >= 1", 0);
-    hcount->Fill("dphimegajets < 2.8", 0);
-  }
-
-  ~region_Top_G_s() {}
-
-  void summary(std::ostream& os)
-  {
-    os << name << std::endl;
-    double gtotal = hcount->GetBinContent(1);
-    for(int c=0; c <= ncuts; c++)
-      {
-        double value(hcount->GetBinContent(c+1));
-        double error(hcount->GetBinError(c+1));
-        double efficiency=0;
-        if ( gtotal > 0 ) efficiency = value/gtotal;
-        char record[1024];
-        sprintf(record, 
-                " %2d %-45s:"
-                " %9.2f +/- %5.1f %6.3f",
-                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
-                value, error, efficiency);
-        os << record << std::endl;
-      }
-    os << std::endl;
-  }
-  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
-  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
-  void reset()			{ done = false; result = false; }
-  bool operator()()		{ return create(); }
-
-  bool create()
-  {
-    if ( done ) return result;
-    done   = true;
-    result = false;
-    count("none");
-
-    if ( !(AK4jets.size() >= 3) ) return false;
-    count("AK4jets.size >= 3");
-
-    if ( !(AK8jets.size() >= 1) ) return false;
-    count("AK8jets.size >= 1");
-
-    if ( !(leptons_veto.size() == 0) ) return false;
-    count("leptons_veto.size == 0");
-
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
-
-    if ( !(photons.size() == 1) ) return false;
-    count("photons.size == 1");
-
-    if ( !(topjets_masstag.size() >= 1) ) return false;
-    count("topjets_masstag.size >= 1");
-
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
-
-    total  += weight;
-    dtotal += weight * weight;
-
-    // NB: remember to update result
-    result  = true;
-    return true;
-  }
-} region_Top_G;
-
-struct region_Top_Z_s : public TNMThing
-{
-  std::string name;
-  double total;
-  double dtotal;
-  TH1F*  hcount;
-  bool   done;
-  bool   result;
-  double weight;
-
-  int    ncuts;
-
-  region_Top_Z_s()
-    : TNMThing(),
-      name("Top_Z"),
+      name("TopcategoryCRG"),
       total(0),
       dtotal(0),
       hcount(0),
@@ -1536,24 +1642,24 @@ struct region_Top_Z_s : public TNMThing
       weight(1),
       ncuts(9)
   {
-    hcount = new TH1F("cutflow_Top_Z", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_TopcategoryCRG", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
 
     hcount->Fill("none", 0);
-    hcount->Fill("AK4jets.size >= 3", 0);
+    hcount->Fill("photons.size == 1", 0);
+    hcount->Fill("AK4jetsNopho.size >= 3", 0);
     hcount->Fill("AK8jets.size >= 1", 0);
-    hcount->Fill("MR > 800", 0);
-    hcount->Fill("(muonssel.size == 2 and electronsveto.size == 0) or (electronssel.size == 2 and muonsveto.size == 0)", 0);
-    hcount->Fill("leptonssel[0].charge + leptonssel[1].charge == 0", 0);
-    hcount->Fill("R2ll > 0.08", 0);
-    hcount->Fill("topjetsmasstag.size >= 1", 0);
-    hcount->Fill("dphimegajets < 2.8", 0);
-    hcount->Fill("fMll(leptonssel[0], leptonssel[1]) < 10", 0);
+    hcount->Fill("leptonsVeto.size == 0", 0);
+    hcount->Fill("tausVeto.size == 0", 0);
+    hcount->Fill("MRNopho > 800", 0);
+    hcount->Fill("Rsqpho > 0.08", 0);
+    hcount->Fill("topjetsMasstag.size >= 1", 0);
+    hcount->Fill("dphimegajetsNopho < 2.8", 0);
   }
 
-  ~region_Top_Z_s() {}
+  ~region_TopcategoryCRG_s() {}
 
   void summary(std::ostream& os)
   {
@@ -1587,35 +1693,32 @@ struct region_Top_Z_s : public TNMThing
     result = false;
     count("none");
 
-    if ( !(AK4jets.size() >= 3) ) return false;
-    count("AK4jets.size >= 3");
+    if ( !(photons.size() == 1) ) return false;
+    count("photons.size == 1");
+
+    if ( !(AK4jetsNopho.size() >= 3) ) return false;
+    count("AK4jetsNopho.size >= 3");
 
     if ( !(AK8jets.size() >= 1) ) return false;
     count("AK8jets.size >= 1");
 
-    if ( !(MR > 800) ) return false;
-    count("MR > 800");
+    if ( !(leptonsVeto.size() == 0) ) return false;
+    count("leptonsVeto.size == 0");
 
-    if ( !((muons_sel.size() == 2  &&
-		  electrons_veto.size() == 0)  ||
-		  (electrons_sel.size() == 2  &&
-		  muons_veto.size() == 0)) ) return false;
-    count("(muons_sel.size == 2 and electrons_veto.size == 0) or (electrons_sel.size == 2 and muons_veto.size == 0)");
+    if ( !(tausVeto.size() == 0) ) return false;
+    count("tausVeto.size == 0");
 
-    if ( !(leptons_sel[0]("charge") + leptons_sel[1]("charge") == 0) ) return false;
-    count("leptons_sel[0].charge + leptons_sel[1].charge == 0");
+    if ( !(MRNopho > 800) ) return false;
+    count("MRNopho > 800");
 
-    if ( !(R2ll > 0.08) ) return false;
-    count("R2ll > 0.08");
+    if ( !(Rsqpho > 0.08) ) return false;
+    count("Rsqpho > 0.08");
 
-    if ( !(topjets_masstag.size() >= 1) ) return false;
-    count("topjets_masstag.size >= 1");
+    if ( !(topjetsMasstag.size() >= 1) ) return false;
+    count("topjetsMasstag.size >= 1");
 
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
-
-    if ( !(_fMll(leptons_sel[0], leptons_sel[1]) < 10) ) return false;
-    count("fMll(leptons_sel[0], leptons_sel[1]) < 10");
+    if ( !(dphimegajetsNopho < 2.8) ) return false;
+    count("dphimegajetsNopho < 2.8");
 
     total  += weight;
     dtotal += weight * weight;
@@ -1624,9 +1727,9 @@ struct region_Top_Z_s : public TNMThing
     result  = true;
     return true;
   }
-} region_Top_Z;
+} region_TopcategoryCRG;
 
-struct region_W_T_s : public TNMThing
+struct region_TopcategoryCRW_s : public TNMThing
 {
   std::string name;
   double total;
@@ -1638,9 +1741,9 @@ struct region_W_T_s : public TNMThing
 
   int    ncuts;
 
-  region_W_T_s()
+  region_TopcategoryCRW_s()
     : TNMThing(),
-      name("W_T"),
+      name("TopcategoryCRW"),
       total(0),
       dtotal(0),
       hcount(0),
@@ -1649,119 +1752,21 @@ struct region_W_T_s : public TNMThing
       weight(1),
       ncuts(6)
   {
-    hcount = new TH1F("cutflow_W_T", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_TopcategoryCRW", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
 
     hcount->Fill("none", 0);
     hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 1", 0);
-    hcount->Fill("bjetsloose.size >= 1", 0);
-    hcount->Fill("Wjets.size >= 1", 0);
-    hcount->Fill("MT < 100", 0);
+    hcount->Fill("leptonsVeto.size == 1", 0);
+    hcount->Fill("topjetsMasstag0b.size >= 1", 0);
     hcount->Fill("dphimegajets < 2.8", 0);
-  }
-
-  ~region_W_T_s() {}
-
-  void summary(std::ostream& os)
-  {
-    os << name << std::endl;
-    double gtotal = hcount->GetBinContent(1);
-    for(int c=0; c <= ncuts; c++)
-      {
-        double value(hcount->GetBinContent(c+1));
-        double error(hcount->GetBinError(c+1));
-        double efficiency=0;
-        if ( gtotal > 0 ) efficiency = value/gtotal;
-        char record[1024];
-        sprintf(record, 
-                " %2d %-45s:"
-                " %9.2f +/- %5.1f %6.3f",
-                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
-                value, error, efficiency);
-        os << record << std::endl;
-      }
-    os << std::endl;
-  }
-  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
-  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
-  void reset()			{ done = false; result = false; }
-  bool operator()()		{ return create(); }
-
-  bool create()
-  {
-    if ( done ) return result;
-    done   = true;
-    result = false;
-    count("none");
-
-    if ( !(region_preselection()) ) return false;
-    count("preselection");
-
-    if ( !(leptons_veto.size() == 1) ) return false;
-    count("leptons_veto.size == 1");
-
-    if ( !(bjets_loose.size() >= 1) ) return false;
-    count("bjets_loose.size >= 1");
-
-    if ( !(Wjets.size() >= 1) ) return false;
-    count("Wjets.size >= 1");
-
-    if ( !(MT < 100) ) return false;
-    count("MT < 100");
-
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
-
-    total  += weight;
-    dtotal += weight * weight;
-
-    // NB: remember to update result
-    result  = true;
-    return true;
-  }
-} region_W_T;
-
-struct region_W_W_s : public TNMThing
-{
-  std::string name;
-  double total;
-  double dtotal;
-  TH1F*  hcount;
-  bool   done;
-  bool   result;
-  double weight;
-
-  int    ncuts;
-
-  region_W_W_s()
-    : TNMThing(),
-      name("W_W"),
-      total(0),
-      dtotal(0),
-      hcount(0),
-      done(false),
-      result(false),
-      weight(1),
-      ncuts(6)
-  {
-    hcount = new TH1F("cutflow_W_W", "", 1, 0, 1);
-    hcount->SetCanExtend(1);
-    hcount->SetStats(0);
-    hcount->Sumw2();
-
-    hcount->Fill("none", 0);
-    hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 1", 0);
-    hcount->Fill("bjetsloose.size > 0", 0);
-    hcount->Fill("Wjetsmasstag.size >= 1", 0);
     hcount->Fill("MT [] 30 100", 0);
-    hcount->Fill("dphimegajets < 2.8", 0);
+    hcount->Fill("bjetsLoose.size == 0", 0);
   }
 
-  ~region_W_W_s() {}
+  ~region_TopcategoryCRW_s() {}
 
   void summary(std::ostream& os)
   {
@@ -1798,21 +1803,21 @@ struct region_W_W_s : public TNMThing
     if ( !(region_preselection()) ) return false;
     count("preselection");
 
-    if ( !(leptons_veto.size() == 1) ) return false;
-    count("leptons_veto.size == 1");
+    if ( !(leptonsVeto.size() == 1) ) return false;
+    count("leptonsVeto.size == 1");
 
-    if ( !(bjets_loose.size() > 0) ) return false;
-    count("bjets_loose.size > 0");
+    if ( !(topjetsMasstag0b.size() >= 1) ) return false;
+    count("topjetsMasstag0b.size >= 1");
 
-    if ( !(Wjets_masstag.size() >= 1) ) return false;
-    count("Wjets_masstag.size >= 1");
+    if ( !(dphimegajets < 2.8) ) return false;
+    count("dphimegajets < 2.8");
 
     if ( !((MT >= 30) &&
 		 (MT <= 100)) ) return false;
     count("MT [] 30 100");
 
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
+    if ( !(bjetsLoose.size() == 0) ) return false;
+    count("bjetsLoose.size == 0");
 
     total  += weight;
     dtotal += weight * weight;
@@ -1821,9 +1826,9 @@ struct region_W_W_s : public TNMThing
     result  = true;
     return true;
   }
-} region_W_W;
+} region_TopcategoryCRW;
 
-struct region_W_Q_s : public TNMThing
+struct region_TopcategorySR_s : public TNMThing
 {
   std::string name;
   double total;
@@ -1835,303 +1840,9 @@ struct region_W_Q_s : public TNMThing
 
   int    ncuts;
 
-  region_W_Q_s()
+  region_TopcategorySR_s()
     : TNMThing(),
-      name("W_Q"),
-      total(0),
-      dtotal(0),
-      hcount(0),
-      done(false),
-      result(false),
-      weight(1),
-      ncuts(6)
-  {
-    hcount = new TH1F("cutflow_W_Q", "", 1, 0, 1);
-    hcount->SetCanExtend(1);
-    hcount->SetStats(0);
-    hcount->Sumw2();
-
-    hcount->Fill("none", 0);
-    hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 0", 0);
-    hcount->Fill("tausveto.size == 0", 0);
-    hcount->Fill("bjetsloose.size == 0", 0);
-    hcount->Fill("Wjetsantitag.size >= 1", 0);
-    hcount->Fill("dphimegajets >= 2.8", 0);
-  }
-
-  ~region_W_Q_s() {}
-
-  void summary(std::ostream& os)
-  {
-    os << name << std::endl;
-    double gtotal = hcount->GetBinContent(1);
-    for(int c=0; c <= ncuts; c++)
-      {
-        double value(hcount->GetBinContent(c+1));
-        double error(hcount->GetBinError(c+1));
-        double efficiency=0;
-        if ( gtotal > 0 ) efficiency = value/gtotal;
-        char record[1024];
-        sprintf(record, 
-                " %2d %-45s:"
-                " %9.2f +/- %5.1f %6.3f",
-                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
-                value, error, efficiency);
-        os << record << std::endl;
-      }
-    os << std::endl;
-  }
-  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
-  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
-  void reset()			{ done = false; result = false; }
-  bool operator()()		{ return create(); }
-
-  bool create()
-  {
-    if ( done ) return result;
-    done   = true;
-    result = false;
-    count("none");
-
-    if ( !(region_preselection()) ) return false;
-    count("preselection");
-
-    if ( !(leptons_veto.size() == 0) ) return false;
-    count("leptons_veto.size == 0");
-
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
-
-    if ( !(bjets_loose.size() == 0) ) return false;
-    count("bjets_loose.size == 0");
-
-    if ( !(Wjets_antitag.size() >= 1) ) return false;
-    count("Wjets_antitag.size >= 1");
-
-    if ( !(dphimegajets >= 2.8) ) return false;
-    count("dphimegajets >= 2.8");
-
-    total  += weight;
-    dtotal += weight * weight;
-
-    // NB: remember to update result
-    result  = true;
-    return true;
-  }
-} region_W_Q;
-
-struct region_W_S_s : public TNMThing
-{
-  std::string name;
-  double total;
-  double dtotal;
-  TH1F*  hcount;
-  bool   done;
-  bool   result;
-  double weight;
-
-  int    ncuts;
-
-  region_W_S_s()
-    : TNMThing(),
-      name("W_S"),
-      total(0),
-      dtotal(0),
-      hcount(0),
-      done(false),
-      result(false),
-      weight(1),
-      ncuts(6)
-  {
-    hcount = new TH1F("cutflow_W_S", "", 1, 0, 1);
-    hcount->SetCanExtend(1);
-    hcount->SetStats(0);
-    hcount->Sumw2();
-
-    hcount->Fill("none", 0);
-    hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 0", 0);
-    hcount->Fill("tausveto.size == 0", 0);
-    hcount->Fill("bjetsmedium.size >= 1", 0);
-    hcount->Fill("Wjets.size >= 1", 0);
-    hcount->Fill("dphimegajets < 2.8", 0);
-  }
-
-  ~region_W_S_s() {}
-
-  void summary(std::ostream& os)
-  {
-    os << name << std::endl;
-    double gtotal = hcount->GetBinContent(1);
-    for(int c=0; c <= ncuts; c++)
-      {
-        double value(hcount->GetBinContent(c+1));
-        double error(hcount->GetBinError(c+1));
-        double efficiency=0;
-        if ( gtotal > 0 ) efficiency = value/gtotal;
-        char record[1024];
-        sprintf(record, 
-                " %2d %-45s:"
-                " %9.2f +/- %5.1f %6.3f",
-                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
-                value, error, efficiency);
-        os << record << std::endl;
-      }
-    os << std::endl;
-  }
-  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
-  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
-  void reset()			{ done = false; result = false; }
-  bool operator()()		{ return create(); }
-
-  bool create()
-  {
-    if ( done ) return result;
-    done   = true;
-    result = false;
-    count("none");
-
-    if ( !(region_preselection()) ) return false;
-    count("preselection");
-
-    if ( !(leptons_veto.size() == 0) ) return false;
-    count("leptons_veto.size == 0");
-
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
-
-    if ( !(bjets_medium.size() >= 1) ) return false;
-    count("bjets_medium.size >= 1");
-
-    if ( !(Wjets.size() >= 1) ) return false;
-    count("Wjets.size >= 1");
-
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
-
-    total  += weight;
-    dtotal += weight * weight;
-
-    // NB: remember to update result
-    result  = true;
-    return true;
-  }
-} region_W_S;
-
-struct region_Top_Q_s : public TNMThing
-{
-  std::string name;
-  double total;
-  double dtotal;
-  TH1F*  hcount;
-  bool   done;
-  bool   result;
-  double weight;
-
-  int    ncuts;
-
-  region_Top_Q_s()
-    : TNMThing(),
-      name("Top_Q"),
-      total(0),
-      dtotal(0),
-      hcount(0),
-      done(false),
-      result(false),
-      weight(1),
-      ncuts(6)
-  {
-    hcount = new TH1F("cutflow_Top_Q", "", 1, 0, 1);
-    hcount->SetCanExtend(1);
-    hcount->SetStats(0);
-    hcount->Sumw2();
-
-    hcount->Fill("none", 0);
-    hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 0", 0);
-    hcount->Fill("tausveto.size == 0", 0);
-    hcount->Fill("bjetsloose.size == 0", 0);
-    hcount->Fill("topjetsantitag.size >= 1", 0);
-    hcount->Fill("dphimegajets >= 2.8", 0);
-  }
-
-  ~region_Top_Q_s() {}
-
-  void summary(std::ostream& os)
-  {
-    os << name << std::endl;
-    double gtotal = hcount->GetBinContent(1);
-    for(int c=0; c <= ncuts; c++)
-      {
-        double value(hcount->GetBinContent(c+1));
-        double error(hcount->GetBinError(c+1));
-        double efficiency=0;
-        if ( gtotal > 0 ) efficiency = value/gtotal;
-        char record[1024];
-        sprintf(record, 
-                " %2d %-45s:"
-                " %9.2f +/- %5.1f %6.3f",
-                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
-                value, error, efficiency);
-        os << record << std::endl;
-      }
-    os << std::endl;
-  }
-  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
-  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
-  void reset()			{ done = false; result = false; }
-  bool operator()()		{ return create(); }
-
-  bool create()
-  {
-    if ( done ) return result;
-    done   = true;
-    result = false;
-    count("none");
-
-    if ( !(region_preselection()) ) return false;
-    count("preselection");
-
-    if ( !(leptons_veto.size() == 0) ) return false;
-    count("leptons_veto.size == 0");
-
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
-
-    if ( !(bjets_loose.size() == 0) ) return false;
-    count("bjets_loose.size == 0");
-
-    if ( !(topjets_antitag.size() >= 1) ) return false;
-    count("topjets_antitag.size >= 1");
-
-    if ( !(dphimegajets >= 2.8) ) return false;
-    count("dphimegajets >= 2.8");
-
-    total  += weight;
-    dtotal += weight * weight;
-
-    // NB: remember to update result
-    result  = true;
-    return true;
-  }
-} region_Top_Q;
-
-struct region_Top_S_s : public TNMThing
-{
-  std::string name;
-  double total;
-  double dtotal;
-  TH1F*  hcount;
-  bool   done;
-  bool   result;
-  double weight;
-
-  int    ncuts;
-
-  region_Top_S_s()
-    : TNMThing(),
-      name("Top_S"),
+      name("TopcategorySR"),
       total(0),
       dtotal(0),
       hcount(0),
@@ -2140,20 +1851,20 @@ struct region_Top_S_s : public TNMThing
       weight(1),
       ncuts(5)
   {
-    hcount = new TH1F("cutflow_Top_S", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_TopcategorySR", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
 
     hcount->Fill("none", 0);
     hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 0", 0);
-    hcount->Fill("tausveto.size == 0", 0);
+    hcount->Fill("leptonsVeto.size == 0", 0);
+    hcount->Fill("tausVeto.size == 0", 0);
     hcount->Fill("topjets.size >= 1", 0);
     hcount->Fill("dphimegajets < 2.8", 0);
   }
 
-  ~region_Top_S_s() {}
+  ~region_TopcategorySR_s() {}
 
   void summary(std::ostream& os)
   {
@@ -2190,11 +1901,11 @@ struct region_Top_S_s : public TNMThing
     if ( !(region_preselection()) ) return false;
     count("preselection");
 
-    if ( !(leptons_veto.size() == 0) ) return false;
-    count("leptons_veto.size == 0");
+    if ( !(leptonsVeto.size() == 0) ) return false;
+    count("leptonsVeto.size == 0");
 
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
+    if ( !(tausVeto.size() == 0) ) return false;
+    count("tausVeto.size == 0");
 
     if ( !(topjets.size() >= 1) ) return false;
     count("topjets.size >= 1");
@@ -2209,9 +1920,9 @@ struct region_Top_S_s : public TNMThing
     result  = true;
     return true;
   }
-} region_Top_S;
+} region_TopcategorySR;
 
-struct region_Top_T_s : public TNMThing
+struct region_TopcategoryCRT_s : public TNMThing
 {
   std::string name;
   double total;
@@ -2223,32 +1934,31 @@ struct region_Top_T_s : public TNMThing
 
   int    ncuts;
 
-  region_Top_T_s()
+  region_TopcategoryCRT_s()
     : TNMThing(),
-      name("Top_T"),
+      name("TopcategoryCRT"),
       total(0),
       dtotal(0),
       hcount(0),
       done(false),
       result(false),
       weight(1),
-      ncuts(6)
+      ncuts(5)
   {
-    hcount = new TH1F("cutflow_Top_T", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_TopcategoryCRT", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
 
     hcount->Fill("none", 0);
     hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 1", 0);
-    hcount->Fill("tausveto.size == 0", 0);
+    hcount->Fill("leptonsVeto.size == 1", 0);
     hcount->Fill("topjets.size >= 1", 0);
     hcount->Fill("dphimegajets < 2.8", 0);
     hcount->Fill("MT < 100", 0);
   }
 
-  ~region_Top_T_s() {}
+  ~region_TopcategoryCRT_s() {}
 
   void summary(std::ostream& os)
   {
@@ -2285,11 +1995,8 @@ struct region_Top_T_s : public TNMThing
     if ( !(region_preselection()) ) return false;
     count("preselection");
 
-    if ( !(leptons_veto.size() == 1) ) return false;
-    count("leptons_veto.size == 1");
-
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
+    if ( !(leptonsVeto.size() == 1) ) return false;
+    count("leptonsVeto.size == 1");
 
     if ( !(topjets.size() >= 1) ) return false;
     count("topjets.size >= 1");
@@ -2307,9 +2014,9 @@ struct region_Top_T_s : public TNMThing
     result  = true;
     return true;
   }
-} region_Top_T;
+} region_TopcategoryCRT;
 
-struct region_Top_W_s : public TNMThing
+struct region_TopcategoryCRQ_s : public TNMThing
 {
   std::string name;
   double total;
@@ -2321,33 +2028,32 @@ struct region_Top_W_s : public TNMThing
 
   int    ncuts;
 
-  region_Top_W_s()
+  region_TopcategoryCRQ_s()
     : TNMThing(),
-      name("Top_W"),
+      name("TopcategoryCRQ"),
       total(0),
       dtotal(0),
       hcount(0),
       done(false),
       result(false),
       weight(1),
-      ncuts(7)
+      ncuts(6)
   {
-    hcount = new TH1F("cutflow_Top_W", "", 1, 0, 1);
+    hcount = new TH1F("cutflow_TopcategoryCRQ", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
     hcount->Sumw2();
 
     hcount->Fill("none", 0);
     hcount->Fill("preselection", 0);
-    hcount->Fill("leptonsveto.size == 1", 0);
-    hcount->Fill("tausveto.size == 0", 0);
-    hcount->Fill("bjetsloose.size == 0", 0);
-    hcount->Fill("topjetsmasstag_0b.size >= 1", 0);
-    hcount->Fill("dphimegajets < 2.8", 0);
-    hcount->Fill("MT [] 30 100", 0);
+    hcount->Fill("leptonsVeto.size == 0", 0);
+    hcount->Fill("tausVeto.size == 0", 0);
+    hcount->Fill("topjetsAntitag.size >= 1", 0);
+    hcount->Fill("dphimegajets >= 2.8", 0);
+    hcount->Fill("bjetsLoose.size == 0", 0);
   }
 
-  ~region_Top_W_s() {}
+  ~region_TopcategoryCRQ_s() {}
 
   void summary(std::ostream& os)
   {
@@ -2384,24 +2090,20 @@ struct region_Top_W_s : public TNMThing
     if ( !(region_preselection()) ) return false;
     count("preselection");
 
-    if ( !(leptons_veto.size() == 1) ) return false;
-    count("leptons_veto.size == 1");
+    if ( !(leptonsVeto.size() == 0) ) return false;
+    count("leptonsVeto.size == 0");
 
-    if ( !(taus_veto.size() == 0) ) return false;
-    count("taus_veto.size == 0");
+    if ( !(tausVeto.size() == 0) ) return false;
+    count("tausVeto.size == 0");
 
-    if ( !(bjets_loose.size() == 0) ) return false;
-    count("bjets_loose.size == 0");
+    if ( !(topjetsAntitag.size() >= 1) ) return false;
+    count("topjetsAntitag.size >= 1");
 
-    if ( !(topjets_masstag_0b.size() >= 1) ) return false;
-    count("topjets_masstag_0b.size >= 1");
+    if ( !(dphimegajets >= 2.8) ) return false;
+    count("dphimegajets >= 2.8");
 
-    if ( !(dphimegajets < 2.8) ) return false;
-    count("dphimegajets < 2.8");
-
-    if ( !((MT >= 30) &&
-		 (MT <= 100)) ) return false;
-    count("MT [] 30 100");
+    if ( !(bjetsLoose.size() == 0) ) return false;
+    count("bjetsLoose.size == 0");
 
     total  += weight;
     dtotal += weight * weight;
@@ -2410,7 +2112,400 @@ struct region_Top_W_s : public TNMThing
     result  = true;
     return true;
   }
-} region_Top_W;
+} region_TopcategoryCRQ;
+
+struct region_WcategorySR_s : public TNMThing
+{
+  std::string name;
+  double total;
+  double dtotal;
+  TH1F*  hcount;
+  bool   done;
+  bool   result;
+  double weight;
+
+  int    ncuts;
+
+  region_WcategorySR_s()
+    : TNMThing(),
+      name("WcategorySR"),
+      total(0),
+      dtotal(0),
+      hcount(0),
+      done(false),
+      result(false),
+      weight(1),
+      ncuts(6)
+  {
+    hcount = new TH1F("cutflow_WcategorySR", "", 1, 0, 1);
+    hcount->SetCanExtend(1);
+    hcount->SetStats(0);
+    hcount->Sumw2();
+
+    hcount->Fill("none", 0);
+    hcount->Fill("preselection", 0);
+    hcount->Fill("leptonsVeto.size == 0", 0);
+    hcount->Fill("tausVeto.size == 0", 0);
+    hcount->Fill("bjetsMedium.size >= 1", 0);
+    hcount->Fill("Wjets.size >= 1", 0);
+    hcount->Fill("dphimegajets < 2.8", 0);
+  }
+
+  ~region_WcategorySR_s() {}
+
+  void summary(std::ostream& os)
+  {
+    os << name << std::endl;
+    double gtotal = hcount->GetBinContent(1);
+    for(int c=0; c <= ncuts; c++)
+      {
+        double value(hcount->GetBinContent(c+1));
+        double error(hcount->GetBinError(c+1));
+        double efficiency=0;
+        if ( gtotal > 0 ) efficiency = value/gtotal;
+        char record[1024];
+        sprintf(record, 
+                " %2d %-45s:"
+                " %9.2f +/- %5.1f %6.3f",
+                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
+                value, error, efficiency);
+        os << record << std::endl;
+      }
+    os << std::endl;
+  }
+  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
+  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
+  void reset()			{ done = false; result = false; }
+  bool operator()()		{ return create(); }
+
+  bool create()
+  {
+    if ( done ) return result;
+    done   = true;
+    result = false;
+    count("none");
+
+    if ( !(region_preselection()) ) return false;
+    count("preselection");
+
+    if ( !(leptonsVeto.size() == 0) ) return false;
+    count("leptonsVeto.size == 0");
+
+    if ( !(tausVeto.size() == 0) ) return false;
+    count("tausVeto.size == 0");
+
+    if ( !(bjetsMedium.size() >= 1) ) return false;
+    count("bjetsMedium.size >= 1");
+
+    if ( !(Wjets.size() >= 1) ) return false;
+    count("Wjets.size >= 1");
+
+    if ( !(dphimegajets < 2.8) ) return false;
+    count("dphimegajets < 2.8");
+
+    total  += weight;
+    dtotal += weight * weight;
+
+    // NB: remember to update result
+    result  = true;
+    return true;
+  }
+} region_WcategorySR;
+
+struct region_WcategoryCRQ_s : public TNMThing
+{
+  std::string name;
+  double total;
+  double dtotal;
+  TH1F*  hcount;
+  bool   done;
+  bool   result;
+  double weight;
+
+  int    ncuts;
+
+  region_WcategoryCRQ_s()
+    : TNMThing(),
+      name("WcategoryCRQ"),
+      total(0),
+      dtotal(0),
+      hcount(0),
+      done(false),
+      result(false),
+      weight(1),
+      ncuts(6)
+  {
+    hcount = new TH1F("cutflow_WcategoryCRQ", "", 1, 0, 1);
+    hcount->SetCanExtend(1);
+    hcount->SetStats(0);
+    hcount->Sumw2();
+
+    hcount->Fill("none", 0);
+    hcount->Fill("preselection", 0);
+    hcount->Fill("leptonsVeto.size == 0", 0);
+    hcount->Fill("tausVeto.size == 0", 0);
+    hcount->Fill("WjetsAntitag.size >= 1", 0);
+    hcount->Fill("bjetsLoose.size == 0", 0);
+    hcount->Fill("dphimegajets >= 2.8", 0);
+  }
+
+  ~region_WcategoryCRQ_s() {}
+
+  void summary(std::ostream& os)
+  {
+    os << name << std::endl;
+    double gtotal = hcount->GetBinContent(1);
+    for(int c=0; c <= ncuts; c++)
+      {
+        double value(hcount->GetBinContent(c+1));
+        double error(hcount->GetBinError(c+1));
+        double efficiency=0;
+        if ( gtotal > 0 ) efficiency = value/gtotal;
+        char record[1024];
+        sprintf(record, 
+                " %2d %-45s:"
+                " %9.2f +/- %5.1f %6.3f",
+                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
+                value, error, efficiency);
+        os << record << std::endl;
+      }
+    os << std::endl;
+  }
+  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
+  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
+  void reset()			{ done = false; result = false; }
+  bool operator()()		{ return create(); }
+
+  bool create()
+  {
+    if ( done ) return result;
+    done   = true;
+    result = false;
+    count("none");
+
+    if ( !(region_preselection()) ) return false;
+    count("preselection");
+
+    if ( !(leptonsVeto.size() == 0) ) return false;
+    count("leptonsVeto.size == 0");
+
+    if ( !(tausVeto.size() == 0) ) return false;
+    count("tausVeto.size == 0");
+
+    if ( !(WjetsAntitag.size() >= 1) ) return false;
+    count("WjetsAntitag.size >= 1");
+
+    if ( !(bjetsLoose.size() == 0) ) return false;
+    count("bjetsLoose.size == 0");
+
+    if ( !(dphimegajets >= 2.8) ) return false;
+    count("dphimegajets >= 2.8");
+
+    total  += weight;
+    dtotal += weight * weight;
+
+    // NB: remember to update result
+    result  = true;
+    return true;
+  }
+} region_WcategoryCRQ;
+
+struct region_WcategoryCRW_s : public TNMThing
+{
+  std::string name;
+  double total;
+  double dtotal;
+  TH1F*  hcount;
+  bool   done;
+  bool   result;
+  double weight;
+
+  int    ncuts;
+
+  region_WcategoryCRW_s()
+    : TNMThing(),
+      name("WcategoryCRW"),
+      total(0),
+      dtotal(0),
+      hcount(0),
+      done(false),
+      result(false),
+      weight(1),
+      ncuts(6)
+  {
+    hcount = new TH1F("cutflow_WcategoryCRW", "", 1, 0, 1);
+    hcount->SetCanExtend(1);
+    hcount->SetStats(0);
+    hcount->Sumw2();
+
+    hcount->Fill("none", 0);
+    hcount->Fill("preselection", 0);
+    hcount->Fill("leptonsVeto.size == 1", 0);
+    hcount->Fill("WjetsMasstag.size >= 1", 0);
+    hcount->Fill("dphimegajets < 2.8", 0);
+    hcount->Fill("MT [] 30 100", 0);
+    hcount->Fill("bjetsLoose.size == 0", 0);
+  }
+
+  ~region_WcategoryCRW_s() {}
+
+  void summary(std::ostream& os)
+  {
+    os << name << std::endl;
+    double gtotal = hcount->GetBinContent(1);
+    for(int c=0; c <= ncuts; c++)
+      {
+        double value(hcount->GetBinContent(c+1));
+        double error(hcount->GetBinError(c+1));
+        double efficiency=0;
+        if ( gtotal > 0 ) efficiency = value/gtotal;
+        char record[1024];
+        sprintf(record, 
+                " %2d %-45s:"
+                " %9.2f +/- %5.1f %6.3f",
+                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
+                value, error, efficiency);
+        os << record << std::endl;
+      }
+    os << std::endl;
+  }
+  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
+  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
+  void reset()			{ done = false; result = false; }
+  bool operator()()		{ return create(); }
+
+  bool create()
+  {
+    if ( done ) return result;
+    done   = true;
+    result = false;
+    count("none");
+
+    if ( !(region_preselection()) ) return false;
+    count("preselection");
+
+    if ( !(leptonsVeto.size() == 1) ) return false;
+    count("leptonsVeto.size == 1");
+
+    if ( !(WjetsMasstag.size() >= 1) ) return false;
+    count("WjetsMasstag.size >= 1");
+
+    if ( !(dphimegajets < 2.8) ) return false;
+    count("dphimegajets < 2.8");
+
+    if ( !((MT >= 30) &&
+		 (MT <= 100)) ) return false;
+    count("MT [] 30 100");
+
+    if ( !(bjetsLoose.size() == 0) ) return false;
+    count("bjetsLoose.size == 0");
+
+    total  += weight;
+    dtotal += weight * weight;
+
+    // NB: remember to update result
+    result  = true;
+    return true;
+  }
+} region_WcategoryCRW;
+
+struct region_WcategoryCRT_s : public TNMThing
+{
+  std::string name;
+  double total;
+  double dtotal;
+  TH1F*  hcount;
+  bool   done;
+  bool   result;
+  double weight;
+
+  int    ncuts;
+
+  region_WcategoryCRT_s()
+    : TNMThing(),
+      name("WcategoryCRT"),
+      total(0),
+      dtotal(0),
+      hcount(0),
+      done(false),
+      result(false),
+      weight(1),
+      ncuts(6)
+  {
+    hcount = new TH1F("cutflow_WcategoryCRT", "", 1, 0, 1);
+    hcount->SetCanExtend(1);
+    hcount->SetStats(0);
+    hcount->Sumw2();
+
+    hcount->Fill("none", 0);
+    hcount->Fill("preselection", 0);
+    hcount->Fill("leptonsVeto.size == 1", 0);
+    hcount->Fill("Wjets.size >= 1", 0);
+    hcount->Fill("dphimegajets < 2.8", 0);
+    hcount->Fill("MT < 100", 0);
+    hcount->Fill("bjetsMedium.size >= 1", 0);
+  }
+
+  ~region_WcategoryCRT_s() {}
+
+  void summary(std::ostream& os)
+  {
+    os << name << std::endl;
+    double gtotal = hcount->GetBinContent(1);
+    for(int c=0; c <= ncuts; c++)
+      {
+        double value(hcount->GetBinContent(c+1));
+        double error(hcount->GetBinError(c+1));
+        double efficiency=0;
+        if ( gtotal > 0 ) efficiency = value/gtotal;
+        char record[1024];
+        sprintf(record, 
+                " %2d %-45s:"
+                " %9.2f +/- %5.1f %6.3f",
+                c+1, hcount->GetXaxis()->GetBinLabel(c+1), 
+                value, error, efficiency);
+        os << record << std::endl;
+      }
+    os << std::endl;
+  }
+  void count(string c)		{ hcount->Fill(c.c_str(), weight); }
+  void write(TFile* fout)	{ fout->cd(); hcount->Write(); }
+  void reset()			{ done = false; result = false; }
+  bool operator()()		{ return create(); }
+
+  bool create()
+  {
+    if ( done ) return result;
+    done   = true;
+    result = false;
+    count("none");
+
+    if ( !(region_preselection()) ) return false;
+    count("preselection");
+
+    if ( !(leptonsVeto.size() == 1) ) return false;
+    count("leptonsVeto.size == 1");
+
+    if ( !(Wjets.size() >= 1) ) return false;
+    count("Wjets.size >= 1");
+
+    if ( !(dphimegajets < 2.8) ) return false;
+    count("dphimegajets < 2.8");
+
+    if ( !(MT < 100) ) return false;
+    count("MT < 100");
+
+    if ( !(bjetsMedium.size() >= 1) ) return false;
+    count("bjetsMedium.size >= 1");
+
+    total  += weight;
+    dtotal += weight * weight;
+
+    // NB: remember to update result
+    result  = true;
+    return true;
+  }
+} region_WcategoryCRT;
 
 
 //------------------------------------------------------------------
@@ -2418,67 +2513,71 @@ analyzer_s::analyzer_s()
 {
   // cache pointers to defines
   defines.clear();
-  defines.push_back(&R2ll);
+  defines.push_back(&MRNopho);
   defines.push_back(&METpho);
+  defines.push_back(&dphimegajetsNopho);
+  defines.push_back(&Rsq);
   defines.push_back(&METl);
-  defines.push_back(&R2);
+  defines.push_back(&Rsqpho);
   defines.push_back(&METll);
-  defines.push_back(&Mll);
-  defines.push_back(&R2l);
-  defines.push_back(&MT);
   defines.push_back(&MR);
+  defines.push_back(&Mll);
+  defines.push_back(&Rsqll);
+  defines.push_back(&Rsql);
+  defines.push_back(&MT);
   defines.push_back(&dphimegajets);
 
   // cache pointers to filtered objects
   objects.clear();
-  objects.push_back(&object_taus_veto);
-  objects.push_back(&object_electrons_sel);
-  objects.push_back(&object_AK8jets);
-  objects.push_back(&object_muons_sel);
-  objects.push_back(&object_met);
-  objects.push_back(&object_AK4jets);
-  objects.push_back(&object_electrons_veto);
-  objects.push_back(&object_muons_veto);
   objects.push_back(&object_photons);
+  objects.push_back(&object_AK8jets);
+  objects.push_back(&object_tausVeto);
+  objects.push_back(&object_electronsVeto);
+  objects.push_back(&object_muonsVeto);
+  objects.push_back(&object_muonsSel);
+  objects.push_back(&object_AK4jets);
+  objects.push_back(&object_met);
+  objects.push_back(&object_electronsSel);
+  objects.push_back(&object_AK4jetsNopho);
   objects.push_back(&object_megajets);
-  objects.push_back(&object_bjets_loose);
-  objects.push_back(&object_topjets_masstag);
-  objects.push_back(&object_bjets_medium);
-  objects.push_back(&object_jets_0pho);
-  objects.push_back(&object_leptons_veto);
-  objects.push_back(&object_leptons_sel);
-  objects.push_back(&object_bjets_tight);
-  objects.push_back(&object_Wjets_masstag);
-  objects.push_back(&object_Wjets_antitag);
-  objects.push_back(&object_topjets);
-  objects.push_back(&object_topjets_antitag);
-  objects.push_back(&object_topjets_masstag_0b);
+  objects.push_back(&object_WjetsMasstag);
+  objects.push_back(&object_WjetsAntitag);
+  objects.push_back(&object_bjetsTight);
+  objects.push_back(&object_megajetsNopho);
+  objects.push_back(&object_bjetsMedium);
   objects.push_back(&object_Wjets);
+  objects.push_back(&object_bjetsLoose);
+  objects.push_back(&object_leptonsVeto);
+  objects.push_back(&object_topjetsMasstag);
+  objects.push_back(&object_leptonsSel);
+  objects.push_back(&object_topjetsMasstag0b);
+  objects.push_back(&object_topjetsAntitag);
+  objects.push_back(&object_topjets);
 
   // cache pointers to regions
   regions.clear();
-  regions.push_back(&region_W_L);
-  regions.push_back(&region_W_G);
-  regions.push_back(&region_W_Z);
-  regions.push_back(&region_Top_L);
+  regions.push_back(&region_TopcategoryCRL);
+  regions.push_back(&region_WcategoryCRZ);
+  regions.push_back(&region_TopcategoryCRZ);
+  regions.push_back(&region_WcategoryCRG);
+  regions.push_back(&region_WcategoryCRL);
   regions.push_back(&region_preselection);
-  regions.push_back(&region_Top_G);
-  regions.push_back(&region_Top_Z);
-  regions.push_back(&region_W_T);
-  regions.push_back(&region_W_W);
-  regions.push_back(&region_W_Q);
-  regions.push_back(&region_W_S);
-  regions.push_back(&region_Top_Q);
-  regions.push_back(&region_Top_S);
-  regions.push_back(&region_Top_T);
-  regions.push_back(&region_Top_W);
+  regions.push_back(&region_TopcategoryCRG);
+  regions.push_back(&region_TopcategoryCRW);
+  regions.push_back(&region_TopcategorySR);
+  regions.push_back(&region_TopcategoryCRT);
+  regions.push_back(&region_TopcategoryCRQ);
+  regions.push_back(&region_WcategorySR);
+  regions.push_back(&region_WcategoryCRQ);
+  regions.push_back(&region_WcategoryCRW);
+  regions.push_back(&region_WcategoryCRT);
  }
 
 analyzer_s::~analyzer_s() {}
 
-void analyzer_s::run(std::vector<TNMObject>& Tau_,
+void analyzer_s::run(std::vector<TNMObject>& Muon_,
                      std::vector<TNMObject>& Jet_,
-                     std::vector<TNMObject>& Muon_,
+                     std::vector<TNMObject>& Tau_,
                      std::vector<TNMObject>& Photon_,
                      TNMObject& MET_,
                      std::vector<TNMObject>& Electron_,
@@ -2486,9 +2585,9 @@ void analyzer_s::run(std::vector<TNMObject>& Tau_,
 
 {
   // copy to internal buffers
-  Tau	= Tau_;
-  Jet	= Jet_;
   Muon	= Muon_;
+  Jet	= Jet_;
+  Tau	= Tau_;
   Photon	= Photon_;
   MET	= MET_;
   Electron	= Electron_;

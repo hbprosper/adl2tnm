@@ -1,7 +1,7 @@
 //------------------------------------------------------------------
 // File: TNMAdapter.cc
 // Description: map input objects to TNMObjects
-// Created:     Sun May  5 09:27:01 2019 by adl2tnm.py v2.0.0
+// Created:     Sun May  5 21:48:25 2019 by adl2tnm.py v2.0.0
 //------------------------------------------------------------------
 #include <algorithm>
 #include <iostream>
@@ -25,10 +25,9 @@ TNMAdapter::~TNMAdapter()
 void TNMAdapter::operator()(eventBuffer& ev, 
           std::string name, std::vector<TNMObject>& p)
 {
-  TString key(name.c_str());
   p.clear();
 
-  if ( key.Contains("Jet") )
+  if ( name == string("Jet") )
     {
       for (size_t c=0; c < ev.Jet_area.size(); c++)
         {
@@ -45,7 +44,7 @@ void TNMAdapter::operator()(eventBuffer& ev,
       return;
     }
 
-  if ( key.Contains("Photon") )
+  if ( name == string("Photon") )
     {
       for (size_t c=0; c < ev.Photon_charge.size(); c++)
         {
@@ -62,7 +61,7 @@ void TNMAdapter::operator()(eventBuffer& ev,
       return;
     }
 
-  if ( key.Contains("Tau") )
+  if ( name == string("Tau") )
     {
       for (size_t c=0; c < ev.Tau_charge.size(); c++)
         {
@@ -84,7 +83,7 @@ void TNMAdapter::operator()(eventBuffer& ev,
       return;
     }
 
-  if ( key.Contains("Muon") )
+  if ( name == string("Muon") )
     {
       for (size_t c=0; c < ev.Muon_charge.size(); c++)
         {
@@ -107,7 +106,7 @@ void TNMAdapter::operator()(eventBuffer& ev,
       return;
     }
 
-  if ( key.Contains("Electron") )
+  if ( name == string("Electron") )
     {
       for (size_t c=0; c < ev.Electron_charge.size(); c++)
         {
@@ -129,7 +128,7 @@ void TNMAdapter::operator()(eventBuffer& ev,
       return;
     }
 
-  if ( key.Contains("FatJet") )
+  if ( name == string("FatJet") )
     {
       for (size_t c=0; c < ev.FatJet_area.size(); c++)
         {
@@ -155,9 +154,8 @@ void TNMAdapter::operator()(eventBuffer& ev,
 void TNMAdapter::operator()(eventBuffer& ev, 
           std::string name, TNMObject& p)
 {
-  TString key(name.c_str());
 
-  if ( key.Contains("MET") )
+  if ( name == string("MET") )
     {
       TNMObject q("MET", 
                   ev.MET_pt, 

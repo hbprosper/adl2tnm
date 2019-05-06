@@ -56,9 +56,6 @@
 #pragma link C++ class eventBuffer::Jet_s;
 #pragma link C++ class vector<eventBuffer::Jet_s>;
 
-#pragma link C++ class eventBuffer::LHEPart_s;
-#pragma link C++ class vector<eventBuffer::LHEPart_s>;
-
 #pragma link C++ class eventBuffer::Muon_s;
 #pragma link C++ class vector<eventBuffer::Muon_s>;
 
@@ -79,9 +76,6 @@
 
 #pragma link C++ class eventBuffer::Tau_s;
 #pragma link C++ class vector<eventBuffer::Tau_s>;
-
-#pragma link C++ class eventBuffer::TrigObj_s;
-#pragma link C++ class vector<eventBuffer::TrigObj_s>;
 
 
 #pragma link C++ class TNMThing;

@@ -4,7 +4,7 @@
 // File:        analyzer_s.h
 // Description: Analyzer for ADL-based analysis:
 //
-// ADL file: razorboost.adl
+// ADL file: razorboost_adl2tnm.adl
 // info block
 //	info        	analysis
 //	experiment  	CMS
@@ -16,7 +16,7 @@
 //	hepdata     	https://www.hepdata.net/record/ins1633588
 //	doi         	10.1103/PhysRevD.97.012007
 //
-// Created:     Sun May  5 09:27:01 2019 by adl2tnm.py v2.0.0
+// Created:     Sun May  5 21:48:25 2019 by adl2tnm.py v2.0.0
 //------------------------------------------------------------------
 #include <algorithm>
 #include <iostream>
@@ -42,9 +42,9 @@ struct analyzer_s
 
   analyzer_s();
   ~analyzer_s();
-  void run(std::vector<TNMObject>& Tau_,
+  void run(std::vector<TNMObject>& Muon_,
            std::vector<TNMObject>& Jet_,
-           std::vector<TNMObject>& Muon_,
+           std::vector<TNMObject>& Tau_,
            std::vector<TNMObject>& Photon_,
            TNMObject& MET_,
            std::vector<TNMObject>& Electron_,

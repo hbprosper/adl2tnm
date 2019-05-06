@@ -1,1 +1,1 @@
-../../data/ttjets_nano.root
+../SUSY_T5tttt_CMSNANOAOD.root

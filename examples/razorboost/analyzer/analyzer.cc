@@ -2,7 +2,7 @@
 // File:        analyzer.cc
 // Description: Analyzer for ADL analysis:
 //
-// ADL file: razorboost.adl
+// ADL file: razorboost_adl2tnm.adl
 // info block
 //	info        	analysis
 //	experiment  	CMS
@@ -14,7 +14,7 @@
 //	hepdata     	https://www.hepdata.net/record/ins1633588
 //	doi         	10.1103/PhysRevD.97.012007
 //
-// Created:     Sun May  5 09:27:01 2019 by adl2tnm.py v2.0.0
+// Created:     Sun May  5 21:48:25 2019 by adl2tnm.py v2.0.0
 //------------------------------------------------------------------
 #include "tnm.h"
 #include "TNMAdapter.h"
@@ -73,14 +73,14 @@ int main(int argc, char** argv)
       if ( entry % 1000 == 0 ) cout << entry << endl;
 
       // map external objects to internal ones
-      std::vector<TNMObject> Tau;
-      adapter(ev, "Tau", 	Tau);
+      std::vector<TNMObject> Muon;
+      adapter(ev, "Muon", 	Muon);
 
       std::vector<TNMObject> Jet;
       adapter(ev, "Jet", 	Jet);
 
-      std::vector<TNMObject> Muon;
-      adapter(ev, "Muon", 	Muon);
+      std::vector<TNMObject> Tau;
+      adapter(ev, "Tau", 	Tau);
 
       std::vector<TNMObject> Photon;
       adapter(ev, "Photon", 	Photon);
@@ -95,9 +95,9 @@ int main(int argc, char** argv)
       adapter(ev, "FatJet", 	FatJet);
 
 
-      analyzer.run(Tau,
+      analyzer.run(Muon,
                    Jet,
-                   Muon,
+                   Tau,
                    Photon,
                    MET,
                    Electron,
