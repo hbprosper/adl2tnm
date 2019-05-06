@@ -4,25 +4,27 @@
 #include "TLorentzVector.h"
 
 namespace Razor {
-  
-  // deltaR:
-  double fdeltaR(double eta1, double phi1, double eta2, double phi2) {
-    double deltaphi = fabs(phi1 - phi2);
-    if (deltaphi > TMath::Pi())
-      deltaphi = TMath::TwoPi() - deltaphi;
-    double deltaeta = fabs(eta1 - eta2);
-    double deltaR = sqrt(deltaphi*deltaphi + deltaeta*deltaeta);
-    return deltaR;
-  }
-  
+
   // deltaPhi:
-  double fdeltaPhi(double phi1, double phi2) {
-    double deltaphi = fabs(phi1 - phi2);
-    if (deltaphi > TMath::Pi())
-      deltaphi = TMath::TwoPi() - deltaphi;
-    return deltaphi;
+  double dPhi(double phi1, double phi2) {
+    double deltaphi = fabs(phi2 - phi1);
+    if ( deltaphi > M_PI ) deltaphi = 2 * M_PI - deltaphi;
+      return deltaphi;
+    }
+  double dPhi(TLorentzVector& p1, TLorentzVector& p2) {
+    return fabs(p1.DeltaPhi(p2));
   }
-  
+
+  // deltaR:
+  double dR(double eta1, double phi1, double eta2, double phi2) {
+    double deltaeta = eta1 - eta2;
+    double deltaphi = dPhi(phi1, phi2);
+    return sqrt(deltaeta*deltaeta + deltaphi*deltaphi);
+  }
+  double dR(TLorentzVector& p1, TLorentzVector& p2) {
+    return p1.DeltaR(p2);
+  }
+
   // Hemispheres:
   std::vector<TLorentzVector> fmegajets(std::vector<TLorentzVector>& myjets) {
     std::vector<TLorentzVector> mynewjets;
