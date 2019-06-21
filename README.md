@@ -41,7 +41,7 @@ __examples/razorboost/SUSY_T5tttt_CMSNANOAOD.root__
 Go to the directory __examples/razorboost__  and execute the following
 command
 ```bash
-	mkvariables.py ../SUSY_T5tttt_CMSNANOAOD.root
+	mkvariables.py SUSY_T5tttt_CMSNANOAOD.root
 ```
 This should produce a file called __variables.txt__ listing all of the
 variables in the first tree (Events) found in the ROOT file.  Now execute the command
