@@ -3,7 +3,8 @@
 # Description: Prototype transpiler of a ADL description to a TNM analyzer
 # Created: 12-Dec-2017 Harrison B. Prosper & Sezen Sekmen
 #          12-May-2018 HBP assume case insensitivity, remove dependence on loop
-#                      keyword, better handling of mapping from vector<TEParticle#                      to vector<TLorentzVector>
+#                      keyword, better handling of mapping from vector<TEParticle
+#                      to vector<TLorentzVector>
 #          14-May-2018 HBP add count histogram for each cut block
 #          16-May-2018 HBP completely decouple lhada analyzer from tnm
 #          18-May-2018 HBP fix bug process_functions
@@ -13,13 +14,15 @@
 #          28-Apr-2019 HBP adapt to recent changes to adl. Also, build
 #                      adapter automatically from variables.txt
 #          04-May-2019 HBP bug fixes and testing on razorboost.adl, change
-#                      TEParticle TNMObject
+#                      TEParticle to TNMObject
+#          21-Jun-2019 HBP write region summaries in the same order as regions
+#                      are list in ADL file.
 #--------------------------------------------------------------------------------
 import sys, os, re, optparse, urllib, subprocess
 from time import ctime
 from string import joinfields, split, replace, find, strip, lower, rstrip
 #--------------------------------------------------------------------------------
-VERSION = 'v2.0.0'
+VERSION = 'v2.0.1'
 DEBUG  = 0
 
 # ADL block types
@@ -213,10 +216,13 @@ using namespace std;
 void %(name)s_s::summary(TFile* fout, ostream& os)
 {
   os << std::endl << "Summary" << std::endl << std::endl;
-  for(size_t c=0; c < regions.size(); c++)
+  vector<size_t> order;
+%(order)s
+  for(size_t c=0; c < order.size(); c++)
     {
-      regions[c]->summary(os);
-      regions[c]->write(fout);
+      size_t j = order[c];
+      regions[j]->summary(os);
+      regions[j]->write(fout);
     }
 }
 '''
@@ -241,6 +247,7 @@ struct TNMThing
 {
   TNMThing() {}
   virtual ~TNMThing() {}
+  virtual std::string name() { return std::string(""); }
   virtual void reset() {}
   virtual bool create() { return true; }
   virtual void write(TFile* fout) {}
@@ -982,6 +989,9 @@ def extractBlocks(filename):
             # remember to reset statement
             statement = []
 
+    # cache original order of regions
+    region_names = regnames
+
     # convert to sets for easier comparisons
     objectnames = set(objectnames)
     regnames    = set(regnames)
@@ -1016,8 +1026,9 @@ def extractBlocks(filename):
         blockmap['object'] = sortObjects(blockmap['object'])
 
     
-    # sort cut blocks so that a block that depends on other blocks
+    # sort region blocks so that a block that depends on other blocks
     # is placed after those blocks.
+ 
     if blockmap.has_key('region'):
         blockmap['region'] = sortObjects(blockmap['region'])
 
@@ -1080,6 +1091,18 @@ def extractBlocks(filename):
     # do some checks
     #--------------------------------------------
     checkForErrors(orig_records)
+    
+    # add original order of regions to blockmap
+    if blockmap.has_key('region'):
+        regmap = {}
+        for ii, (regname, _, _) in enumerate(blockmap['region']):
+            regmap[regname] = ii
+            
+        print_order = [0]*len(region_names)
+        for ii, regname in enumerate(region_names):
+           print_order[ii] = regmap[regname]
+           
+    blockmap['print_order'] = print_order
     return blockmap
 #--------------------------------------------------------------------------------
 def printBlocks(blocks):
@@ -2075,7 +2098,7 @@ def process_regions(names, blocks, blocktypes):
     for name, words, records in blocks['region']:    
         vcuts += '  regions.push_back(&region_%s);\n' % name
     
-    # implement selections
+    # implement regions
     tab2 = ' '*2
     tab4 = tab2*2
       
@@ -2094,7 +2117,7 @@ def process_regions(names, blocks, blocktypes):
 
         cutdef += 'struct region_%s_s : public TNMThing\n' % name 
         cutdef += '{\n'
-        cutdef += '  std::string name;\n'
+        cutdef += '  std::string name_;\n'
         cutdef += '  double total;\n'
         cutdef += '  double dtotal;\n'
         cutdef += '  TH1F*  hcount;\n'
@@ -2102,9 +2125,10 @@ def process_regions(names, blocks, blocktypes):
         cutdef += '  bool   result;\n'
         cutdef += '  double weight;\n\n'
         cutdef += '  int    ncuts;\n\n'
+        cutdef += '  std::string name() { return name_; }\n\n'
         cutdef += '  region_%s_s()\n' % name
         cutdef += '''    : TNMThing(),
-      name("%s"),
+      name_("%s"),
       total(0),
       dtotal(0),
       hcount(0),
@@ -2130,7 +2154,7 @@ def process_regions(names, blocks, blocktypes):
         cutdef += '  ~region_%s_s() {}\n\n' % name
         cutdef += '''  void summary(std::ostream& os)
   {
-    os << name << std::endl;
+    os << name_ << std::endl;
     double gtotal = hcount->GetBinContent(1);
     for(int c=0; c <= ncuts; c++)
       {
@@ -2321,6 +2345,17 @@ cp $ADL2TNM_PATH/downloads/%(adaptername).cc src/
     # write out C++ code
     # --------------------------------------------
 
+    # write summaries of regions in same order as in ADL file
+    if blocks.has_key('print_order'):
+        order = blocks['print_order']
+        tab = '  '
+        s = ''
+        for ii in order:
+            s += '%sorder.push_back(%d);\n' % (tab, ii)
+        names['order'] = s
+    else:
+        names['order'] = ''
+        
     record = TEMPLATE_CC % names
     open('src/%(name)s_s.cc' % names, 'w').write(record)
 

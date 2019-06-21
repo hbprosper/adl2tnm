@@ -36,12 +36,12 @@ __examples/razorboost/razorboost.adl__
 
 on a 1000-event __CMS nano-AOD__ file called 
 
-__examples/data/ttjets\_nano.root__
+__examples/razorboost/SUSY\_T5tttt\_CMSNANOAOD..root__
 
 Go to the directory __examples/razorboost__  and execute the following
 command
 ```bash
-	mkvariables.py ../data/ttjets_nano.root
+	mkvariables.py ../SUSY\_T5tttt\_CMSNANOAOD..root
 ```
 This should produce a file called __variables.txt__ listing all of the
 variables in the first tree (Events) found in the ROOT file.  Now execute the command
@@ -58,7 +58,7 @@ directory and build the analyzer program __myanalyzer__ using
 List, in the file __filelist.txt__, the names of the files to be read by cmsnano,
 e.g., as follows,
 ```bash
-	ls -1 ../../data/ttjets_nano.root > filelist.txt
+	ls -1 ../SUSY\_T5tttt\_CMSNANOAOD..root > filelist.txt
 ./myanalyzer | tee summary.dat
 ```
 to run the  program.
