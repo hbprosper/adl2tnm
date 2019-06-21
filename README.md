@@ -46,7 +46,7 @@ command
 This should produce a file called __variables.txt__ listing all of the
 variables in the first tree (Events) found in the ROOT file.  Now execute the command
 ```bash
-	adl2tnm.py -a myanalyzer razorboost.adl
+	adl2tnm.py -a myanalyzer razorboost_adl2tnm.adl
 ```
 This should create a directory called __myanalyzer__. Go to that
 directory and build the analyzer program __myanalyzer__ using
