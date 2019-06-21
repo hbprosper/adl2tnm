@@ -26,8 +26,6 @@ Install this package using the commands
 and once per terminal session do
 ```bash
   source setup.(c)sh
-  cd treestream
-  source setup.(c)sh
 ```
 
 ## Example
