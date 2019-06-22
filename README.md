@@ -1,4 +1,4 @@
-# lhada2tnm
+# adl2tnm
 
 ## Introduction
 
@@ -55,7 +55,7 @@ directory and build the analyzer program __myanalyzer__ using
    make
    source setup.(c)sh
 ```
-List, in the file __filelist.txt__, the names of the files to be read by cmsnano,
+List, in the file __filelist.txt__, the names of the files to be read by __myanalyzer__,
 e.g., as follows,
 ```bash
 	ls -1 ../SUSY_T5tttt_CMSNANOAOD.root > filelist.txt
