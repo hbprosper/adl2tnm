@@ -474,6 +474,7 @@ def fill_EXTERNALS(filename='../variables.txt'):
 
         # A Delphes Hack!
         a_singleton = a_singleton or vname[:8] in ['MissingE', 'ScalarHT']
+                  
         k = find(vname, '_')
         if a_singleton:
             if k < 0:
@@ -492,7 +493,6 @@ def fill_EXTERNALS(filename='../variables.txt'):
             else:
                 oname = vname[:k]
                 fname = vname[k+1:]
-                
             NONSINGLETONS.add(oname)
             
         #print(vtype, oname, fname)
@@ -543,6 +543,9 @@ def buildAdapterBody(names, filename='../variables.txt'):
         vtype = t[0]
         vname = t[2]
 
+        ##DB
+        #print("vtype( %s )\tvname( %s )" % (vtype, vname))
+        
         # determine whether or not current object is a singleton.
         # a singleton does not have a counter variable
         a_singleton = len(t) < 5
@@ -562,7 +565,9 @@ def buildAdapterBody(names, filename='../variables.txt'):
             else:
                 oname = vname[:k]
                 fname = vname[k+1:]
-
+        ##DB       
+        #print("\toname( %s )\tfname( %s ) %s" % (oname, fname, a_singleton))
+        
         if not OBJ.has_key(oname): OBJ[oname] = {'singleton': a_singleton,
                                                  'pt':  None,
                                                  'eta': None,
@@ -581,16 +586,21 @@ def buildAdapterBody(names, filename='../variables.txt'):
 
     for oname in onames:
         
-        # only build objects that appear in the internal symbol table        
+        # only build objects that appear in the internal symbol table
+
         if not (oname in ISYMBOLS):
             continue
         
         if DEBUG > 0:
             print('buildAdapter object ( %s )' % oname)
+
+        ##DB
+        ##print('buildAdapter object ( %s )' % oname)
         
         obj =  OBJ[oname]
         names['oname'] = oname
 
+        ##D
         if oname in SINGLETONS:
         #if obj['singleton']:
             # ----------------------
@@ -607,7 +617,7 @@ def buildAdapterBody(names, filename='../variables.txt'):
             if oname == 'MissingET':
                 names['pt'] = 'ev.MissingET_MET'
             elif oname == 'ScalarHT':
-                namws['pt'] = 'ev.ScalarHT_HT'
+                names['pt'] = 'ev.ScalarHT_HT'
                 
             sbody += '''
   if ( name == string("%(oname)s") )
@@ -875,10 +885,12 @@ def extractBlocks(filename):
         
     from copy import deepcopy
     import re
-    from string import rstrip, split, strip    
+    from string import rstrip, split, strip
+
     #--------------------------------------------
     # read ADL file
-    #--------------------------------------------    
+    #--------------------------------------------
+
     try:
         records = open('../%s' % filename).readlines()
     except:
@@ -2317,14 +2329,15 @@ cp $ADL2TNM_PATH/downloads/TNMObject.cc src/
         record = TEMPLATE_ADAPTER_CC % names
         open('src/%(adaptername)s.cc' % names, 'w').write(record)
     else:
-        fn = '$ADL2TNM_PATH/downloads/%(adaptername)s.h' % names
+        names['base'] = os.environ['ADL2TNM_PATH']
+        fn = '%(base)s/downloads/%(adaptername)s.h' % names
         if not os.path.exists(fn):
-            boohoo('event adapter %(adaptername)s.cc not found' % names)
+            boohoo('adapter header\n\t%s\n not found' % fn)
     
         # copy specified adapter to local area
         cmd = '''
 cp $ADL2TNM_PATH/downloads/%(adaptername)s.h include/ 
-cp $ADL2TNM_PATH/downloads/%(adaptername).cc src/
+cp $ADL2TNM_PATH/downloads/%(adaptername)s.cc src/
 ''' % names
         os.system(cmd)        
 
