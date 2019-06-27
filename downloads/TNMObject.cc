@@ -54,6 +54,7 @@ TNMObject::TNMObject(string name,
 
   Value["Pt"]    = Value["pt"];
   Value["PT"]    = Value["pt"];
+  Value["pT"]    = Value["pt"];
   Value["Eta"]   = Value["eta"];
   Value["|Eta|"] = Value["|eta|"];
   Value["Phi"]   = Value["phi"];
@@ -102,8 +103,10 @@ TNMObject::TNMObject(const TLorentzVector& p)
   Value["phi"]   = Phi();
   Value["mass"]  = M();
   Value["m"]     = M();
+  
   Value["Pt"]    = Value["pt"];
   Value["PT"]    = Value["pt"];
+  Value["pT"]    = Value["pt"];
   Value["Eta"]   = Value["eta"];
   Value["|Eta|"] = Value["|eta|"];
   Value["Phi"]   = Value["phi"];
@@ -163,8 +166,10 @@ TNMObject& TNMObject::operator=(const TLorentzVector& rhs)
       Value["phi"]   = Phi();
       Value["mass"]  = M();
       Value["m"]     = M();
+      
       Value["Pt"]    = Value["pt"];
       Value["PT"]    = Value["pt"];
+      Value["pT"]    = Value["pt"];
       Value["Eta"]   = Value["eta"];
       Value["|Eta|"] = Value["|eta|"];
       Value["Phi"]   = Value["phi"];

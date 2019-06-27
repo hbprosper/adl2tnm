@@ -1,0 +1,96 @@
+info analysis
+  title "Search for new physics in events with two soft oppositely charged leptons and missing transverse momentum in proton-proton collisions at sqrts = 13 TeV "
+  experiment CMS
+  id SUS-16-048
+  publication Phys. Lett. B 782 (2018) 440
+  sqrtS 13.0
+  lumi 35.9
+  arXiv 1801.01846
+  hepdata 
+  doi 10.1016/j.physletb.2018.05.062
+
+object muons
+  take Muon
+  select pT [] 3.5 30
+  select abs(eta) < 2.4
+  # select some ID and iso - check with Delphes
+  # e.g. select IsolationVarRhoCorr < 0.1
+
+object electrons
+  take Electron
+  select pT [] 3.5 30
+  select abs(eta) < 2.5
+  # select some ID and iso - check with Delphes
+  # select pT < 10 ? loose == 1 : tight == 1
+
+object leptons
+  take electrons
+  take muons
+  
+object jets
+  take Jet
+  select pT > 25  
+  select abs(Eta) < 2.4
+
+object bjets
+  take jets
+  select BTag == 1
+
+object MET
+  take MissingET
+
+define dilepton = leptons[0] + leptons[1]
+define dielectron = electrons[0] + electrons[1]
+define dimuon = muons[0] + muons[1]
+define HT = sum(jets.pT)
+define MTl1 = sqrt( 2*leptons[0].pT * MET.pT*(1-cos(MET.phi - leptons[0].phi )))
+define MTl2 = sqrt( 2*leptons[1].pT * MET.pT*(1-cos(MET.phi - leptons[1].phi )))
+define Mtautau = fMtautau(leptons[0], leptons[1], MET)
+
+region DileptonPresel
+  # This selection follows Table 1 in the paper 
+  # (for the time being, except for the isolation criteria)
+  select size(leptons) == 2
+  select leptons[0].charge * leptons[1].charge == -1
+  select leptons[0].pT > 5
+  select leptons[1].pT > 5
+  select size(bjets) == 0
+  select size(electrons) == 2 or size(muons) == 2 ? mass(dilepton) [] 4 9 : mass(dilepton) [] 10.5 50
+  select dilepton.pT > 3
+  select size(muons) == 2 ? MET.pT > 125 : MET.pT > 200
+  select MET.pT / HT [] 0.6 1.4
+  select HT > 100
+  select MTl1 < 70 and MTl2 < 70
+
+region CharginoDimuonPresel
+  # This selection follows the cutflow table in the twiki
+  select size(muons) == 2
+  select muons[0].pT [] 5 30
+  select muons[0].charge * muons[1].charge == -1
+  select dimuon.pT > 3 
+  select dimuon.mass [] 4 50
+  reject dimuon.mass [] 9 10.5
+  select MET.pT [] 125 200
+  select MET.pT / HT [] 0.6 1.4
+  select size(jets) >= 1
+  select HT > 100
+  select size(bjets) == 0
+  reject Mtautau [] 0 160 
+  select MTl1 < 70 and MTl2 < 70
+
+region StopDimuonPresel
+  # This selection follows the cutflow table in the twiki
+  select size(muons) == 2
+  select muons[0].pT [] 5 30
+  select muons[0].charge * muons[1].charge == -1
+  select dimuon.pT > 3 
+  select dimuon.mass [] 4 50
+  reject dimuon.mass [] 9 10.5
+  select MET.pT [] 125 200
+  select MET.pT / HT [] 0.6 1.4
+  select size(jets) >= 1
+  select HT > 100
+  select size(bjets) == 0
+  reject Mtautau [] 0 160
+
+

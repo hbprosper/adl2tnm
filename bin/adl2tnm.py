@@ -45,8 +45,8 @@ KEYWORDS   = ['experiment',
               'reject']
 
 MATHFUN = ['sqrt', 'or',  'and', 'size',
-           'abs',  'exp', 'log',
-           'sin',  'cos', 'tan',
+           'abs',  'exp', 'log', 'sum', 
+           'sin',  'cos', 'tan', 'mass',
            'pow',  'min', 'max'
            'sinh', 'cosh','tanh']
 TOKENS  = set(BLOCKTYPES+KEYWORDS)
@@ -57,8 +57,8 @@ SPACE6  = ' '*6
 KWORDS   = r'\b(%s)\b' % joinfields(KEYWORDS, '|')
 exclude  = re.compile(KWORDS)
 getwords = re.compile('lha[.][a-zA-Z0-9]+|[a-zA-Z][a-zA-Z0-9_]*')
-getvars  = re.compile('@?[a-zA-Z][a-zA-Z0-9_.;:]*@?')
-getdvars = re.compile('[a-zA-Z]+[a-zA-Z0-9;:]*[.]')
+getvars  = re.compile('@?[a-zA-Z][a-zA-Z0-9_.;:@#\$]*@?')
+getdvars = re.compile('[a-zA-Z]+[a-zA-Z0-9;:@#\$]*[.]')
 swords   = re.compile('[a-zA-Z][\w]*')
 swords_extended  = re.compile('[|]?[a-zA-Z][\w]*[|]?')
 
@@ -181,6 +181,19 @@ using namespace std;
 // The following functions, objects, and variables are globally visible
 // within this programming unit.
 //------------------------------------------------------------------
+double sum(vector<TNMObject>& o, string attribute)
+{ 
+  double x=0;
+  for(size_t c=0; c < o.size(); c++) x += o[c](attribute);
+  return x;
+}
+
+inline
+double mass(TNMObject o) { return o("mass"); }
+
+inline
+size_t size(vector<TNMObject>& o) { return o.size(); }
+
 %(fundef)s
 //------------------------------------------------------------------
 %(objdef)s
@@ -303,10 +316,12 @@ int main(int argc, char** argv)
   // The default is to select all branches
   // Use second argument to select specific branches
   // Example:
-  //   varlist = 'Jet_PT Jet_Eta Jet_Phi'
+  //   varlist = "Jet_PT Jet_Eta Jet_Phi"
   //   ev = eventBuffer(stream, varlist)
+  // If you write varlist = "Jet" then all branches starting with 
+  //   Jet will be selected.
 
-  eventBuffer ev(stream);
+  eventBuffer ev(stream, "%(varlist)s");
   int nevents = ev.size();
   cout << "number of events: " << nevents << endl;
 
@@ -520,7 +535,7 @@ def fill_EXTERNALS(filename='../variables.txt'):
 #------------------------------------------------------------------------------
 # build body of Adapter from variables.txt
 #------------------------------------------------------------------------------
-def buildAdapterBody(names, filename='../variables.txt'):
+def buildAdapterBody(names, partial=False, filename='../variables.txt'):
     if not os.path.exists(filename):
         boohoo('''
     file %s not found
@@ -667,6 +682,8 @@ def buildAdapterBody(names, filename='../variables.txt'):
                                 %(mass)s));
 ''' % names
             for fname, vname in obj['fields']:
+                if lower(fname) in ['pt', 'eta', 'phi', 'mass']: continue
+                    
                 names['vname'] = vname               
                 if fname == '':
                     names['fname'] = '"%s"' % vname
@@ -676,22 +693,30 @@ def buildAdapterBody(names, filename='../variables.txt'):
 
                 # Delphes hack
                 if vname.find('_size') > 2: continue
-                    
-                # only fields that appear in internal symbol table
-                if not (fname in ISYMBOLS):
-                    aname = '|%s|' % fname
-                    if not (aname in ISYMBOLS):
-                        continue
-                else:
-                    aname = None
+
+                if partial:
+                    # only fields that appear in internal symbol table
+                    if not (fname in ISYMBOLS):
+                        if aname in ISYMBOLS:
+                            names['fname'] = '"|%s|"' % fname
+                            vbody += '%(tab)sp.back().Value[%(fname)s] '\
+                            '\t= fabs(ev.%(vname)s[c]);\n' % names
+                        else:
+                            continue
                     
                 vbody += '%(tab)sp.back().Value[%(fname)s] '\
                     '\t= ev.%(vname)s[c];\n' % names
-                    
-                if aname != None:
-                     names['fname'] = '"|%s|"' % fname
-                     vbody += '%(tab)sp.back().Value[%(fname)s] '\
-                       '\t= fabs(ev.%(vname)s[c]);\n' % names                    
+
+                # hack for charge
+                if fname == 'Charge':
+                    names['fname'] = '"charge"'
+                    vbody += '%(tab)sp.back().Value[%(fname)s] '\
+                    '\t= ev.%(vname)s[c];\n' % names
+                elif fname == 'charge':
+                    names['fname'] = '"Charge"'
+                    vbody += '%(tab)sp.back().Value[%(fname)s] '\
+                    '\t= ev.%(vname)s[c];\n' % names
+                       
             vbody += '''        }
       return;
     }
@@ -819,8 +844,8 @@ def checkForErrors(records):
     findwords  = re.compile(r'[a-zA-Z][\w_]*')
 
     # check symbols
-    lsymbols = set(); lmap = {}
-    gsymbols = set(); gmap = {}
+    lsymbols = set(); lmap = {} # local symbols
+    gsymbols = set(); gmap = {} # gloabl symbols
     for ii, (lineno, record) in enumerate(records):
         words  = findwords.findall(record)
         if len(words) < 2: continue
@@ -842,6 +867,7 @@ def checkForErrors(records):
                 pass
             elif token in ['select', 'region', 'take', 'define']:
                 if not (name in lsymbols): lmap[name] = []
+                if lower(name) in ['pt', 'eta', 'phi', 'mass', 'charge']: continue
                 lsymbols.add(name)
                 lmap[name].append((ii, lineno))               
 
@@ -876,7 +902,7 @@ def checkForErrors(records):
         print('\n** adl2tnm WARNING *** verify the following line(s)\n')
         warnings.sort()
         for ii, record, name in warnings:
-            print('%5d: %s' % (ii, record))
+            print('%5d: %s --> %s ?' % (ii, record, name))
         print
     
 def extractBlocks(filename):
@@ -1045,8 +1071,8 @@ def extractBlocks(filename):
         blockmap['region'] = sortObjects(blockmap['region'])
 
     #--------------------------------------------            
-    # get list of potential functions. try
-    # to find where they are
+    # get list of potential functions other than
+    # standard math functions
     #--------------------------------------------
     recs = []
     for btype in ['object', 'define', 'region']:
@@ -1062,7 +1088,8 @@ def extractBlocks(filename):
         cmd = 'grep "\s%s\s*[(]" $ADL2TNM_PATH/downloads/*.h' % name
         res = os.popen(cmd).read()
         res = str.strip(res)
-        if res == '': continue
+        if res == '':
+            continue
             
         ISYMBOLS.add(name)
         ISYMBOLS.add('_%s' % name)
@@ -1332,93 +1359,86 @@ def checkForLoopables(record, blocktypes, loopables):
 #--------------------------------------------------------------------------------
 # handle cutvectors depending on whether we have a select or a reject
 #--------------------------------------------------------------------------------
+inside  = re.compile('[\w_\/\-\+\*\(\)\.\[\]]+\s*'\
+                         '\[\]\s*-?[0-9]*[.]?[0-9]*\s-?[0-9]*[.]?[0-9]*')
+                         
+outside = re.compile('[\w_\/\-\+\*\(\)\.\[\]]+\s*'\
+                         '\]\[\s*-?[0-9]*[.]?[0-9]*\s-?[0-9]*[.]?[0-9]*')
+
 def fixrecord(record, loopables):
     # look for statements of the form
     #    s [] lo up => ((s >= lo) and (s <= up)) 
     # or
     #    s ][ lo up => ((s <= lo) or (s >= up))
     #
-    # first split into ands and or substrings
-    #DB
-    debug = False #find(record, 'dR(') > -1
-    #DB
-    if debug:
-        print(record)
+
+    insides = inside.findall(record)
+
+    for rec in insides:
+        q = rec.split('[]')
+        with_left_paren  = False
+        with_right_paren = False
+        if len(q) > 1:
+            s, b = map(str.strip, q)
+            # check for possible enclosing parentheses
+            if s[0]  == '(':
+                s = s[1:]
+                with_left_paren  = True
+
+            if b[-1] == ')':
+                b = b[:-1]
+                with_right_paren = True
+
+            c = b.split()
+            if len(c) != 2:
+                boohoo("** can't decode line\n%s" % record)
+            lo, up = c
+            newrec = '(%s >= %s) and (%s <= %s)' % (s, lo, s, up)
+
+            if with_left_paren:
+                newrec = '( %s' % newrec
+            if with_right_paren:
+                newrec = '%s )' % newrec
+
+            t = record.split(rec)
+            record = t[0] + newrec + t[1]
+        
+    outsides = outside.findall(record)
     
-    ANDS = re.split(r'\band\b', record)
-    for j, a in enumerate(ANDS):
-        ORS = re.split(r'\bor\b', a)
-        for i, o in enumerate(ORS):
-            
-            q = o.split('[]')
-            with_left_paren  = False
-            with_right_paren = False
-            
-            if len(q) > 1:
-                s, b = map(str.strip, q)
-                # check for possible enclosing parentheses
-                if s[0]  == '(':
-                    s = s[1:]
-                    with_left_paren  = True
-                    
-                if b[-1] == ')':
-                    b = b[:-1]
-                    with_right_paren = True
-                    
-                c = b.split()
-                #DB
-                if debug:
-                    print('\tc = %s' % c)
-                if len(c) != 2:
-                    boohoo("** can't decode line\n%s" % record)
-                lo, up = c
-                ORS[i] = '(%s >= %s) and (%s <= %s)' % (s, lo, s, up)
-                
-                if with_left_paren:
-                    ORS[i] = '( %s' % ORS[i]
-                if with_right_paren:
-                    ORS[i] = '%s )' % ORS[i]                    
-                continue
+    for rec in outsides:
+        q = rec.split('][')
+        with_left_paren  = False
+        with_right_paren = False
 
-            q = map(str.strip, o.split(']['))
-            with_left_paren  = False
-            with_right_paren = False
-            
-            if len(q) > 1:
-                s, b = map(str.strip, q)                
-                # check for possible enclosing parentheses
-                if s[0]  == '(':
-                    s = s[1:]
-                    with_left_paren  = True
-                    
-                if b[-1] == ')':
-                    b = b[:-1]
-                    with_right_paren = True
+        if len(q) > 1:
+            s, b = map(str.strip, q)                
+            # check for possible enclosing parentheses
+            if s[0]  == '(':
+                s = s[1:]
+                with_left_paren  = True
 
-                c = b.split()
-                if len(c) != 2:
-                    boohoo("** can't decode line\n%s" % record)
-                lo, up = c
-                ORS[i] = '(%s <= %s) or (%s >= %s)' % (s, lo, s, up)
+            if b[-1] == ')':
+                b = b[:-1]
+                with_right_paren = True
 
-                if with_left_paren:
-                    ORS[i] = '( %s' % ORS[i]
-                if with_right_paren:
-                    ORS[i] = '%s )' % ORS[i]                  
-                continue
-            
-        ANDS[j] = ' or '.join(ORS)
-    
-    # stitch back together
-    record = ' and '.join(ANDS)
-    #DB
-    if debug:
-        print(record)
+            c = b.split()
+            if len(c) != 2:
+                boohoo("** can't decode line\n%s" % record)
+            lo, up = c
+            newrec = '(%s <= %s) or (%s >= %s)' % (s, lo, s, up)
+
+            if with_left_paren:
+                newrec = '( %s' % newrec
+            if with_right_paren:
+                newrec = '%s )' % newrec
+
+            t = record.split(rec)
+            record = t[0] + newrec + t[1]
         
     # start with some simple replacements
     record = replace(record, "|", "@")
-    record = replace(record, "[", ";:")
-    record = replace(record, "]", ":;")
+    record = replace(record, "[", "#")
+    record = replace(record, "]", "$")
     
     # replace AND and OR with c++ syntax for the same
     record = cppAND.sub('&&\n\t\t', record)
@@ -1458,32 +1478,52 @@ def convert2cpp(record, blocktypes,
     #    a     -> a[n]       if a is a loopable
     #    a     -> a          if a local variable or a singleton
     #    a.b   -> a[n]("b")  if a is a dotted loopable
-    #    .size -> .size()
+    #    a[m].b-> a[m]("b")  
+    #    size(a) -> a.size()
+    #    
     # however, if a variable is a local variable, e.g., assigned
     # within an implied loop, it should be used as is.
-    
+
+    #DEBUG = 1 if record.find("muons[") > -1 else 0 
     if DEBUG > 0:
         print('    ORIGINAL_RECORD( %s )' % record)
         
     record, words = fixrecord(record, loopables)
-    
+
+    # handle sum(a.b)
+    cmd  = re.compile('sum\s*[(].*?[)]')
+    recs = cmd.findall(record)
+    for rec in recs:
+        wds = swords.findall(rec)
+        if len(wds) == 3:
+            newrec =  '%s(%s, "%s")' % tuple(wds)
+            t = record.split(rec)
+            record = t[0] + newrec + t[1]
+
+    # handle size(A)
+    cmd  = re.compile('size\s*[(].*?[)]')
+    recs = cmd.findall(record)
+    for rec in recs:
+        wds = swords.findall(rec)
+        if len(wds) == 2:
+            newrec =  '%s.size()' % wds[1]
+            t = record.split(rec)
+            record = t[0] + newrec + t[1]
+            
     if DEBUG > 0:
         print('     FIXED_RECORD( %s )' % record)
         print('     WORDS( %s )' % words)
 
     # identify attributes
     fields = set()
-    for name in words:           
+    for name in words:
         # split into name plus field
         t = split(name, '.')
         dotted = len(t) > 1
         oname  = swords.findall(t[0])[0] # strip away decorations
-        fname  = '_%s' % oname  # internal function name  
+        fname  = '_%s' % oname  # internal function name
         field  = t[-1]          # note: could be same as oname
-        
-        #DB
-        debug = False #str.find(name, 'leptons_sel') > -1
-            
+
         # fix certain fields
         if field == 'size':
             edit     = re.compile(r'[.]size(?![(])')
@@ -1494,11 +1534,24 @@ def convert2cpp(record, blocktypes,
         if blocktypes.has_key('region'):
             if name in blocktypes['region']:
                 edit = re.compile(r'(?<!region[_])\b%s\b' % name)
-                newfield = 'region_%s()' % name
+                newname = 'region_%s()' % name
                 if DEBUG > 0:
-                    print "\tregion: name( %s ) newname( %s )" % (name, newfield)
-                record = edit.sub(newfield, record)
-
+                    print "\tregion: name( %s ) newname( %s )" % (name, newname)
+                record = edit.sub(newname, record)
+                
+        if blocktypes.has_key('define'):
+            # if name is that of a define, type cast for TNMObject
+            # unless the object is being passed to functions such as
+            # mass(*)
+            if oname in blocktypes['define']:
+                deftype = blocktypes['define_type'][oname]
+                if deftype == 'TNMObject':
+                    cmd  = re.compile('mass\s*\(\s*%s\s*\)' % oname)
+                    if len(cmd.findall(record)) == 0:
+                        newname = '((%s)%s)' % (deftype, oname)
+                        edit = re.compile(r'\b%s\b' % oname)
+                        record = edit.sub(newname, record)
+                    
         # skip if singleton, loopable, local variable, etc.
         a_object    = oname in blocktypes['object']
         a_region    = oname in blocktypes['region']
@@ -1507,6 +1560,8 @@ def convert2cpp(record, blocktypes,
         a_loopable  = oname in loopables
         a_localvar  = oname in localvars
         a_function  = fname in blocktypes['function']
+        isfunc = re.compile('%s\s*[(].*?[)]' % oname).findall(record)
+        a_function  = a_function or len(isfunc) > 0
         
         skip = \
           a_object or\
@@ -1535,12 +1590,8 @@ def convert2cpp(record, blocktypes,
     if DEBUG > 0:
         print('      FIELDS:')
         for field in fields:
-            print('        FIELD( %s )' % field)
-
-    #DB
-    if debug:
-        print('oname( %s ) %s' % (oname, fields))
-        
+            print('       %s' % field)
+            
     # now change fields
     # observe rule(s):
     # 1. define and region names should not be changed
@@ -1571,13 +1622,10 @@ def convert2cpp(record, blocktypes,
         print "NEW_RECORD( %s )" % strip(record)                    
 
     # now go back to original symbols |, [, and ]    
-    record = replace(record, '@',  '|')
-    record = replace(record, ';:', '[')
-    record = replace(record, ':;', ']')
-    #DB
-    if debug:
-        print(record)
-        
+    record = replace(record, '@', '|')
+    record = replace(record, '#', '[')
+    record = replace(record, '$', ']')
+
     if DEBUG > 0:
         print '-'*80
         print "CLEAN_RECORD( %s )" % record
@@ -1908,10 +1956,12 @@ def process_objects(names, blocks, blocktypes):
 
         vobjects += '%sobjects.push_back(&object_%s);\n' % (tab2, name)            
 
+    # cache external object set
+    blocktypes['extobjset'] = extobjset
+    
     # create list of external objects
     extobjdef = ''
     for name in extobjset:
-        #DB
         if DEBUG > 0:
             print 'EXTERNAL OBJECT( %s )' % name        
         singleton = name in SINGLETONS
@@ -2089,9 +2139,12 @@ def process_defines(names, blocks, blocktypes):
         vardef += DEF_TEMPLATE_CC % names
         if DEBUG > 0:
             print('DEFINE( %s = %s)' % (name, statement) )
-    
+
     names['vardef']  = vardef
     names['vdefines']= vdefines
+
+    # cache define types
+    blocktypes['define_type'] = deftypemap
 #--------------------------------------------------------------------------------
 def process_regions(names, blocks, blocktypes):
     if DEBUG > 0:
@@ -2375,8 +2428,9 @@ cp $ADL2TNM_PATH/downloads/%(adaptername)s.cc src/
     record = TEMPLATE_HH % names
     open('include/%(name)s_s.h' % names, 'w').write(record)
 
+    # create varlist for event_buffer
+    names['varlist'] = ' '.join(blocktypes['extobjset'])
     record = TNM_TEMPLATE_CC % names
-
     open('%(name)s.cc' % names, 'w').write(record)
 
 
