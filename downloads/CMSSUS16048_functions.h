@@ -44,9 +44,9 @@ namespace softdilepton {
     return Z.M();
   }
 
-  // MT : transverse mass 
-  double fMT(TLorentzVector& lepton, TLorentzVector& pfmet){
-     return sqrt( 2 * lepton.Pt() * pfmet.Pt() * ( 1 - cos( pfmet.Phi() - lepton.Phi() ) ) );
-  }
+  /* // MT : transverse mass  */
+  /* double fMT(TLorentzVector& lepton, TLorentzVector& pfmet){ */
+  /*    return sqrt( 2 * lepton.Pt() * pfmet.Pt() * ( 1 - cos( pfmet.Phi() - lepton.Phi() ) ) ); */
+  /* } */
 
 }

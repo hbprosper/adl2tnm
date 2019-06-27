@@ -1359,10 +1359,10 @@ def checkForLoopables(record, blocktypes, loopables):
 #--------------------------------------------------------------------------------
 # handle cutvectors depending on whether we have a select or a reject
 #--------------------------------------------------------------------------------
-inside  = re.compile('[\w_\/\-\+\*\(\)\.\[\]]+\s*'\
+inside  = re.compile('[\w_\/\-\+\*\(\)\.\[\]|]+\s*'\
                          '\[\]\s*-?[0-9]*[.]?[0-9]*\s-?[0-9]*[.]?[0-9]*')
                          
-outside = re.compile('[\w_\/\-\+\*\(\)\.\[\]]+\s*'\
+outside = re.compile('[\w_\/\-\+\*\(\)\.\[\]|]+\s*'\
                          '\]\[\s*-?[0-9]*[.]?[0-9]*\s-?[0-9]*[.]?[0-9]*')
 
 def fixrecord(record, loopables):
@@ -1372,8 +1372,9 @@ def fixrecord(record, loopables):
     #    s ][ lo up => ((s <= lo) or (s >= up))
     #
 
-    insides = inside.findall(record)
-
+    insides  = inside.findall(record)
+    outsides = outside.findall(record)
+    
     for rec in insides:
         q = rec.split('[]')
         with_left_paren  = False
@@ -1402,9 +1403,7 @@ def fixrecord(record, loopables):
 
             t = record.split(rec)
             record = t[0] + newrec + t[1]
-        
-    outsides = outside.findall(record)
-    
+                
     for rec in outsides:
         q = rec.split('][')
         with_left_paren  = False
@@ -1539,11 +1538,12 @@ def convert2cpp(record, blocktypes,
                     print "\tregion: name( %s ) newname( %s )" % (name, newname)
                 record = edit.sub(newname, record)
                 
-        if blocktypes.has_key('define'):
+        if blocktypes.has_key('define_type'):
             # if name is that of a define, type cast for TNMObject
             # unless the object is being passed to functions such as
             # mass(*)
             if oname in blocktypes['define']:
+                
                 deftype = blocktypes['define_type'][oname]
                 if deftype == 'TNMObject':
                     cmd  = re.compile('mass\s*\(\s*%s\s*\)' % oname)
