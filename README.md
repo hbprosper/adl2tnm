@@ -11,8 +11,15 @@ package is structured as follows,
 | __Directory__  | __Description__                   |
 | --------|-------------------|
 | bin           |  location of __adl2tnm.py__                                  |
+| examples/monophoton |  ATLAS EXOT-2016-32 analysis |
+|                     |  __ATLASEXOT1704.0384_Delphes_adl2tnm.adl__ |
+|                     |  __DM_10_800_Delphes.root__ |
 | examples/razorboost |  CMS razor boost analysis |
-| examples/razorboost |  contains __SUSY_T5tttt_CMSNANOAOD.root__ |
+|                     |  __razorboost_adl2tnm.adl__ |
+|                     |  __SUSY_T5tttt_CMSNANOAOD.root__ |
+| examples/softdilepton |  CMS SUS-16-048 analysis |
+|                     |  __CMSSUS16048_adl2tnm.adl__ |
+|                     |  __pp13TeVhzz4l.root__ |
 | downloads   | required code would be downloaded here |
 
 ## Installation
@@ -32,7 +39,7 @@ and once per terminal session do
 In this example, we shall try to run the __CMS razor boost  analysis__,
 described in the ADL file 
 
-__examples/razorboost/razorboost.adl__ 
+__examples/razorboost/razorboost_adl2tnm.adl__ 
 
 on a 10,000-event __CMS nano-AOD__ file called 
 
@@ -46,20 +53,20 @@ command
 This should produce a file called __variables.txt__ listing all of the
 variables in the first tree (Events) found in the ROOT file.  Now execute the command
 ```bash
-	adl2tnm.py -a myanalyzer razorboost_adl2tnm.adl
+	adl2tnm.py -a razor razorboost_adl2tnm.adl
 ```
-This should create a directory called __myanalyzer__. Go to that
-directory and build the analyzer program __myanalyzer__ using
+This should create a directory called __razor__. Go to that
+directory and build the analyzer program __razor__ using
 ```bash
-   cd myanalyzer
+   cd razor
    make
    source setup.(c)sh
 ```
-List, in the file __filelist.txt__, the names of the files to be read by __myanalyzer__,
+List, in the file __filelist.txt__, the names of the files to be read by __razor__,
 e.g., as follows,
 ```bash
 	ls -1 ../SUSY_T5tttt_CMSNANOAOD.root > filelist.txt
-./myanalyzer | tee summary.dat
+./razor | tee summary.dat
 ```
 to run the  program.
 You will see several "no dictionary" warnings about complicated types that
