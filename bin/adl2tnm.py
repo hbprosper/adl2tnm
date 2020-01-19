@@ -25,9 +25,9 @@
 import sys, os, re, optparse, urllib, subprocess
 from time import ctime
 #--------------------------------------------------------------------------------
+print(sys.version)
 VERSION = 'v2.1.0'
 DEBUG  = 0
-print(sys.version)
 
 # ADL block types
 BLOCKTYPES = ['info', 'function', 'object', 'define', 'region']
