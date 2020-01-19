@@ -17,12 +17,14 @@
 #                      TEParticle to TNMObject
 #          21-Jun-2019 HBP write region summaries in the same order as regions
 #                      are list in ADL file.
+#          17-Jan-2020 HBP 1. make compatible with Python 3
+#                          2. handle weight statement
+#                          3. write out selected regions to a TTree
 #--------------------------------------------------------------------------------
 import sys, os, re, optparse, urllib, subprocess
 from time import ctime
-from string import joinfields, split, replace, find, strip, lower, rstrip
 #--------------------------------------------------------------------------------
-VERSION = 'v2.0.1'
+VERSION = 'v2.1.0'
 DEBUG  = 0
 
 # ADL block types
@@ -41,6 +43,7 @@ KEYWORDS   = ['experiment',
               'code',
               'take',
               'set',
+              'weight',
               'select',
               'reject']
 
@@ -54,7 +57,7 @@ TOKENS  = set(BLOCKTYPES+KEYWORDS)
 SPACE6  = ' '*6
 
 # some simple regular expression to dissect ADL file
-KWORDS   = r'\b(%s)\b' % joinfields(KEYWORDS, '|')
+KWORDS   = r'\b(%s)\b' % '|'.join(KEYWORDS)
 exclude  = re.compile(KWORDS)
 getwords = re.compile('lha[.][a-zA-Z0-9]+|[a-zA-Z][a-zA-Z0-9_]*')
 getvars  = re.compile('@?[a-zA-Z][a-zA-Z0-9_.;:@#\$]*@?')
@@ -202,11 +205,36 @@ size_t size(vector<TNMObject>& o) { return o.size(); }
 //------------------------------------------------------------------
 %(regdef)s
 //------------------------------------------------------------------
-%(name)s_s::%(name)s_s()
+%(name)s_s::%(name)s_s(TFile* _file)
+  : file(_file),
+    tree(0)
 {
 %(vdefines)s
 %(vobjects)s
-%(vcuts)s }
+%(vcuts)s
+  // 1 if a region is selected, 0 otherwise
+  passed.clear();
+  passed.resize(regions.size(), 0);
+
+  // accumulate number of times each region is selected
+  total.clear();
+  total.resize(regions.size(), 0);
+
+  // order of regions in ADL file
+  order.clear();
+%(order)s
+  if ( file )
+    {
+      file->cd();
+      tree = new TTree("regions", "selected regions");
+      for(size_t c=0; c < regions.size(); c++)
+	    {
+	      int j = order[c];
+	      std::string name(regions[j]->name());
+	      tree->Branch(name.c_str(), &passed[j], string(name+string("/F")).c_str());
+	    }
+    } 
+}
 
 %(name)s_s::~%(name)s_s() {}
 
@@ -219,23 +247,38 @@ size_t size(vector<TNMObject>& o) { return o.size(); }
   for(size_t c=0; c < objects.size(); c++) objects[c]->reset();
   for(size_t c=0; c < regions.size(); c++) regions[c]->reset();
 
-  // create objects by applying selection criteria
-  for(size_t c=0; c < objects.size(); c++) objects[c]->create();
+  // apply selection criteria
+  for(size_t c=0; c < objects.size(); c++) objects[c]->select();
 
-  // create regions by applying selection criteria
-  for(size_t c=0; c < regions.size(); c++) regions[c]->create();
+  // apply selection criteria
+  for(size_t c=0; c < regions.size(); c++)
+    {
+      passed[c] = regions[c]->select() ? regions[c]->weight : 0;
+      total[c] += passed[c];
+    }
+
+    if ( file )
+    {
+      file->cd();
+      tree->Fill();
+    }
 }
 
-void %(name)s_s::summary(TFile* fout, ostream& os)
+void %(name)s_s::summary(ostream& os)
 {
   os << std::endl << "Summary" << std::endl << std::endl;
-  vector<size_t> order;
-%(order)s
   for(size_t c=0; c < order.size(); c++)
     {
       size_t j = order[c];
       regions[j]->summary(os);
-      regions[j]->write(fout);
+      regions[j]->write(file);
+      //os << regions[j]->name() << "\ttotal: " << total[j] << endl << endl;
+    }
+
+  if ( file )
+    {
+      file->cd();
+      tree->Write();
     }
 }
 '''
@@ -253,6 +296,7 @@ TEMPLATE_HH =\
 #include <algorithm>
 #include <iostream>
 #include "TFile.h"
+#include "TTree.h"
 #include "TH1F.h"
 #include "TNMObject.h"
 //------------------------------------------------------------------
@@ -262,9 +306,11 @@ struct TNMThing
   virtual ~TNMThing() {}
   virtual std::string name() { return std::string(""); }
   virtual void reset() {}
-  virtual bool create() { return true; }
+  virtual bool select() { return true; }
   virtual void write(TFile* fout) {}
   virtual void summary(std::ostream& os) {}
+
+  float weight;
 };
     
 struct %(name)s_s
@@ -273,10 +319,16 @@ struct %(name)s_s
   std::vector<TNMThing*> objects;
   std::vector<TNMThing*> regions;
 
-  %(name)s_s();
+  TFile* file;
+  TTree* tree;
+  std::vector<float> passed;
+  std::vector<float> total;
+  std::vector<int>   order;
+  
+  %(name)s_s(TFile* _file);
   ~%(name)s_s();
   void run(%(runargs)s);
-  void summary(TFile* fout, std::ostream& os);
+  void summary(std::ostream& os);
 };
 
 #endif
@@ -338,7 +390,7 @@ int main(int argc, char** argv)
   //------------------------------------------------------------------
   %(adaptername)s %(adapter)s;
 
-  %(name)s_s %(analyzer)s;
+  %(name)s_s %(analyzer)s(of.file);
   //------------------------------------------------------------------
   // Loop over events
   //------------------------------------------------------------------
@@ -346,13 +398,13 @@ int main(int argc, char** argv)
     {
       // read an event into event buffer
       ev.read(entry);
-      if ( entry %(percent)s 1000 == 0 ) cout << entry << endl;
+      //if ( entry %(percent)s 1000 == 0 ) cout << entry << endl;
 %(extobjimpl)s
 %(runimpl)s
     }
 
   // summarize analysis
-  %(analyzer)s.summary(of.file_, cout);
+  %(analyzer)s.summary(cout);
 
   ev.close();
   of.close();
@@ -449,10 +501,10 @@ def join(left, a, right):
 def getWords(records):
     words = []
     for record in records:
-        words += split(record)
+        words += str.split(record)
     # exclude ADL keywords
-    record = joinfields(words, ' ')
-    words  = split(exclude.sub('', record))
+    record = ' '.join(words)
+    words  = str.split(exclude.sub('', record))
     return words
 
 def boohoo(message):
@@ -490,7 +542,7 @@ def fill_EXTERNALS(filename='../variables.txt'):
         # A Delphes Hack!
         a_singleton = a_singleton or vname[:8] in ['MissingE', 'ScalarHT']
                   
-        k = find(vname, '_')
+        k = str.find(vname, '_')
         if a_singleton:
             if k < 0:
                 oname = 'Event'
@@ -565,7 +617,7 @@ def buildAdapterBody(names, partial=False, filename='../variables.txt'):
         # a singleton does not have a counter variable
         a_singleton = len(t) < 5
         
-        k = find(vname, '_')
+        k = str.find(vname, '_')
         if a_singleton:
             if k < 0:
                 oname = 'Event'
@@ -682,7 +734,7 @@ def buildAdapterBody(names, partial=False, filename='../variables.txt'):
                                 %(mass)s));
 ''' % names
             for fname, vname in obj['fields']:
-                if lower(fname) in ['pt', 'eta', 'phi', 'mass']: continue
+                if str.lower(fname) in ['pt', 'eta', 'phi', 'mass']: continue
                     
                 names['vname'] = vname               
                 if fname == '':
@@ -758,14 +810,14 @@ def findHeaderFile(infile, incs):
 funcname = re.compile('[a-zA-Z]+[\w\<:,\>]*(?=[(])')
 findtemparg = re.compile('(?<=[<]).+(?=[>])')
 def decodeFunction(record):
-    record = replace(record, "\n", " ")
+    record = str.replace(record, "\n", " ")
     fname  = funcname.findall(record)
     if len(fname) == 0:
         boohoo("can't decode %s" % record)
     fname = fname[0]
-    rtype, args = split(record, fname)
-    rtype = strip(rtype)
-    args  = strip(args)[1:-1]
+    rtype, args = str.split(record, fname)
+    rtype = str.strip(rtype)
+    args  = str.strip(args)[1:-1]
     
     # since template arguments can include commas, hide them before
     # splitting using commas
@@ -775,26 +827,26 @@ def decodeFunction(record):
         orig = '<%s>' % t
         temp = '@%d' % ii
         hidden.append((orig, temp))
-        args = replace(args, orig, temp)
+        args = str.replace(args, orig, temp)
 
     # replace commas by "#" and go back to original types
     # and split at "#"
-    args = map(strip, split(args, ","))
-    args = joinfields(args, '#')
+    args = [str.strip(x) for x in str.split(args, ",")]
+    args = '#'.join(args)
     for orig, temp in hidden:
-        args = replace(args, temp, orig)
+        args = str.replace(args, temp, orig)
 
     # ok, now get types etc.
-    args = map(strip, split(args, "#"))
+    args = [str.strip(x) for x in str.split(args, "#")]
     argtypes = []
     argnames = []
     for arg in args:
-        t = split(arg, ' ')
+        t = str.split(arg, ' ')
         if len(t) == 1:
             argtypes.append(t[0])
             argnames.append('')
         elif len(t) > 1:
-            argtypes.append(joinfields(t[:-1], ' '))
+            argtypes.append(' '.join(t[:-1]))
             argnames.append(t[-1])
     return (rtype, fname, argtypes, argnames)
 #-----------------------------------------------------------------------------
@@ -867,19 +919,19 @@ def checkForErrors(records):
                 pass
             elif token in ['select', 'region', 'take', 'define']:
                 if not (name in lsymbols): lmap[name] = []
-                if lower(name) in ['pt', 'eta', 'phi', 'mass', 'charge']: continue
+                if str.lower(name) in ['pt', 'eta', 'phi', 'mass', 'charge']: continue
                 lsymbols.add(name)
                 lmap[name].append((ii, lineno))               
 
     if DEBUG > 0:
-        keys = gmap.keys()
+        keys = [x for x in gmap.keys()]
         keys.sort()
         print('\nobject, define, region\n')
         for name in keys:
             ii = gmap[name] 
             print(name, ii)
 
-        keys = lmap.keys()
+        keys = [x for x in lmap.keys()]
         keys.sort()
         print('\nselect, reject\n')
         for name in keys:
@@ -893,7 +945,7 @@ def checkForErrors(records):
         indices = lmap[unknown]
         for ii, lineno in lmap[unknown]:
             ll, record = records[ii]
-            t = split(record)
+            t = str.split(record)
             if t[0] == 'take':
                 # most likely an instance
                 continue
@@ -907,7 +959,7 @@ def checkForErrors(records):
     
 def extractBlocks(filename):
     if DEBUG > 0:
-        print '\nBEGIN( extractBlocks )'
+        print('\nBEGIN( extractBlocks )')
         
     from copy import deepcopy
     import re
@@ -916,7 +968,6 @@ def extractBlocks(filename):
     #--------------------------------------------
     # read ADL file
     #--------------------------------------------
-
     try:
         records = open('../%s' % filename).readlines()
     except:
@@ -929,7 +980,7 @@ def extractBlocks(filename):
     # set up some simple regular expressions
     #--------------------------------------------    
     stripcomments = re.compile('[#].*')
-    blocktypes = r'\b(%s)\b' % joinfields(BLOCKTYPES, '|')
+    blocktypes = r'\b(%s)\b' % '|'.join(BLOCKTYPES)
     isblock    = re.compile(blocktypes)
     fcallname  = re.compile('[a-zA-Z_][\w_]+?\s*(?=[(])')    
    
@@ -1003,7 +1054,7 @@ def extractBlocks(filename):
 
         try:
             l, next_record = records[ii+1]
-            next_token = split(next_record)[0]
+            next_token = str.split(next_record)[0]
         except:
             next_token = None
 
@@ -1014,8 +1065,7 @@ def extractBlocks(filename):
             blocks[bname]['body'].append(' '.join(statement))
 
             if DEBUG > 0:
-                print(" %s statement( %s )" % (bname,
-                                                   blocks[bname]['body']))
+                print(" %s statement( %s )" % (bname, blocks[bname]['body']))
 
             # update internal symbol table
             ISYMBOLS.add(bname)
@@ -1103,7 +1153,7 @@ def extractBlocks(filename):
         res = str.strip(res)
         body= [header]
         if res != '':
-            t = split(res)
+            t = res.split()
             res = ' '.join(t[:2])
             body.append(res)
 
@@ -1168,14 +1218,14 @@ def process_info(names, blocks):
     info = '//\n// ADL file: %(filename)s\n' % names
     info+= '// info block\n'
 
-    if not blocks.has_key('info'):
+    if not ('info' in blocks):
         boohoo("Thou lump of foul deformity. I can't find info block!")
 
     name, words, body = blocks['info'][0]
     
     for record in body:
-        t = split(record)
-        record = '//\t%-12s\t%s\n' % (t[0], joinfields(t[1:], ' '))
+        t = str.split(record)
+        record = '//\t%-12s\t%s\n' % (t[0], ' '.join(t[1:]))
         info += record
     info += '//'
     names['info'] = info
@@ -1196,11 +1246,11 @@ def process_functions(names, blocks, blocktypes):
     headers = set()
     for name, words, records in blocks['function']:
         for record in records:
-            #t = split(record)
+            #t = record.split()
             #token = t[0]
             #if token != 'code': continue
             #includeset.add(t[1])
-            t = split(record)
+            t = record.split()
             if t[0] == 'namespace':
                 namespaceset.add(t[-1])
             else:
@@ -1208,7 +1258,7 @@ def process_functions(names, blocks, blocktypes):
                 include = str.split(record, '/')[-1]
                 includeset.add(include)
                 if DEBUG > 0:
-                    print "  name( %s) \tinclude( %s )" % (name, include)
+                    print("  name( %s) \tinclude( %s )" % (name, include))
 
     includes = ''
     for record in includeset:
@@ -1233,7 +1283,7 @@ def process_functions(names, blocks, blocktypes):
         
         # this function could be within a namespace:
         # <namespace>.[<namespace>.]<function>
-        t = split(name, '.')
+        t = str.split(name, '.')
         name = t[-1] # assume function name is last field
         if len(t) > 1:
             namespace = ':: '.join(t[:-1]) + '::'
@@ -1244,7 +1294,7 @@ def process_functions(names, blocks, blocktypes):
         intname = '_%s' % str.replace(extname, '::', '_')
 
         if DEBUG > 1:
-            print "  internal, external names( %s, %s )" % (intname, extname)
+            print("  internal, external names( %s, %s )" % (intname, extname))
             
         # get details of external function
         args = []
@@ -1341,7 +1391,7 @@ def checkForLoopables(record, blocktypes, loopables):
     objectnames = set(blocktypes['object'])
     loopy = set()
     for x in words:
-        t = split(x, '.')
+        t = str.split(x, '.')
         name = t[0]
         if name in SINGLETONS: continue
             
@@ -1435,9 +1485,9 @@ def fixrecord(record, loopables):
             record = t[0] + newrec + t[1]
         
     # start with some simple replacements
-    record = replace(record, "|", "@")
-    record = replace(record, "[", "#")
-    record = replace(record, "]", "$")
+    record = str.replace(record, "|", "@")
+    record = str.replace(record, "[", "#")
+    record = str.replace(record, "]", "$")
     
     # replace AND and OR with c++ syntax for the same
     record = cppAND.sub('&&\n\t\t', record)
@@ -1448,7 +1498,7 @@ def fixrecord(record, loopables):
     # fix loopables in current record
     onames = set()
     for ii, name in enumerate(words):
-        t = split(name, '.')
+        t = str.split(name, '.')
         a_loopable = t[0] in loopables
         if a_loopable:
             onames.add(t[0])
@@ -1517,7 +1567,7 @@ def convert2cpp(record, blocktypes,
     fields = set()
     for name in words:
         # split into name plus field
-        t = split(name, '.')
+        t = str.split(name, '.')
         dotted = len(t) > 1
         oname  = swords.findall(t[0])[0] # strip away decorations
         fname  = '_%s' % oname  # internal function name
@@ -1535,7 +1585,7 @@ def convert2cpp(record, blocktypes,
                 edit = re.compile(r'(?<!region[_])\b%s\b' % name)
                 newname = 'region_%s()' % name
                 if DEBUG > 0:
-                    print "\tregion: name( %s ) newname( %s )" % (name, newname)
+                    print("\tregion: name( %s ) newname( %s )" % (name, newname))
                 record = edit.sub(newname, record)
                 
         if blocktypes.has_key('define_type'):
@@ -1618,18 +1668,18 @@ def convert2cpp(record, blocktypes,
             record = edit.sub(newfield, record)
 
     if DEBUG > 0:
-        print "OLD_RECORD( %s )" % strip(oldrecord)                    
-        print "NEW_RECORD( %s )" % strip(record)                    
+        print("OLD_RECORD( %s )" % str.strip(oldrecord))                    
+        print("NEW_RECORD( %s )" % str.strip(record))                    
 
     # now go back to original symbols |, [, and ]    
-    record = replace(record, '@', '|')
-    record = replace(record, '#', '[')
-    record = replace(record, '$', ']')
+    record = str.replace(record, '@', '|')
+    record = str.replace(record, '#', '[')
+    record = str.replace(record, '$', ']')
 
     if DEBUG > 0:
-        print '-'*80
-        print "CLEAN_RECORD( %s )" % record
-        print '-'*80
+        print('-'*80)
+        print("CLEAN_RECORD( %s )" % record)
+        print('-'*80)
     return record
 
 def change_to_internal_name(statement, blocks):
@@ -1648,18 +1698,18 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
     
     def decode_and_look_ahead(index, records):
         record= records[index]
-        t     = split(record)
+        t     = str.split(record)
         token = t[0]
         value = ' '.join(t[1:])
         if index < len(records) - 1:
-            t = split(records[index+1])
+            t = str.split(records[index+1])
             next_token = t[0]
         else:
             next_token = None
         return (token, value, next_token)
 
     if DEBUG > 0:
-        print '\nBEGIN( process_object_body ) OBJECT( %s )' % name
+        print('\nBEGIN( process_object_body ) OBJECT( %s )' % name)
 
     tab     = TAB
     tab4    = ' '*4
@@ -1792,6 +1842,9 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
                 # REJECT
                 prefix = ''
                 logic  = '.OR()'
+            elif token == 'weight':
+                prefix = ''
+                logic  = ''
             else:
                 # SET
                 prefix = ''
@@ -1810,7 +1863,7 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
                 # statement contains loopables
                 # ----------------------------------------                
                 if DEBUG > 0:
-                    print '   BEGIN( IMPLICIT LOOP )'
+                    print('   BEGIN( IMPLICIT LOOP )')
                     
                 # this select contains an implicit loop and
                 # therefore returns multiple values that we refer to as a
@@ -1852,7 +1905,7 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
                                                      loop_varname, statement)
                 objdef += '%s  }\n' % tab
                 if DEBUG > 0:
-                    print '   END( IMPLICIT LOOP )'
+                    print('   END( IMPLICIT LOOP )')
                     
                 if token in ['select', 'reject']:
                     objdef += '%sif ( %s(%s%s) ) continue;\n' % \
@@ -1885,7 +1938,7 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
 
 def process_objects(names, blocks, blocktypes):
     if DEBUG > 0:
-        print '\nBEGIN( process_objects )'
+        print('\nBEGIN( process_objects )')
 
     if not blocks.has_key('object'): return  ''
         
@@ -1905,10 +1958,10 @@ def process_objects(names, blocks, blocktypes):
     # function.
     for name, words, records in blocks['object']:
         if DEBUG > 0:
-            print 'INTERNAL OBJECT( %s )' % name
+            print('INTERNAL OBJECT( %s )' % name)
 
         for record in records:
-            t = split(record)
+            t = str.split(record)
             token = t[0]
 
             if token == 'take':
@@ -1963,16 +2016,16 @@ def process_objects(names, blocks, blocktypes):
     extobjdef = ''
     for name in extobjset:
         if DEBUG > 0:
-            print 'EXTERNAL OBJECT( %s )' % name        
+            print('EXTERNAL OBJECT( %s )' % name)        
         singleton = name in SINGLETONS
         if singleton:
             extobjdef += '\nTNMObject %s;\n\n' % name
             if DEBUG > 0:
-                print "\tsingleton object( %s )" % name
+                print("\tsingleton object( %s )" % name)
         else:
             extobjdef += 'vector<TNMObject> %s;\n' % name
             if DEBUG > 0:
-                print "\tmulti object( %s )" % name            
+                print("\tmulti object( %s )" % name)           
     
     # create records containing declarations of external and
     # internal objects.
@@ -2011,11 +2064,10 @@ def process_objects(names, blocks, blocktypes):
         extobjimpl  += '%s%s(ev, "%s", \t%s);\n\n' % (tab6, adapter, name, name)
         copyargsimpl+= '  %s\t= %s_;\n' % (name, name)
         
-    runimpl     = rstrip(runimpl)[:-1] + ');\n'
-    runargs     = rstrip(runargs)[:-1]
-    runargsimpl = rstrip(runargsimpl)[:-1] + ')\n'
+    runimpl     = str.rstrip(runimpl)[:-1] + ');\n'
+    runargs     = str.rstrip(runargs)[:-1]
+    runargsimpl = str.rstrip(runargsimpl)[:-1] + ')\n'
  
-
     names['runimpl']     = runimpl
     names['runargs']     = runargs
     names['runargsimpl'] = runargsimpl
@@ -2028,7 +2080,7 @@ def process_objects(names, blocks, blocktypes):
         objdef += '{\n'
         objdef += '%sobject_%s_s() : TNMThing() {}\n' % (tab2, name)
         objdef += '%s~object_%s_s() {}\n' % (tab2, name) 
-        objdef += '%sbool create()\n' % tab2
+        objdef += '%sbool select()\n' % tab2
         objdef += '%s{\n' % tab2
         objdef += process_object_body(name, records, tab4, blocks, blocktypes)
         objdef += '%sreturn true;\n' % tab2
@@ -2045,7 +2097,7 @@ def process_defines(names, blocks, blocktypes):
 
     names['vardef']  = ''
     names['vdefines']= ''
-    if not blocks.has_key('define'): return  ''
+    if not ('define' in blocks): return  ''
         
     tab2 = ' '*2
     vardef   = '// defines (aliases)\n'
@@ -2148,13 +2200,13 @@ def process_defines(names, blocks, blocktypes):
 #--------------------------------------------------------------------------------
 def process_regions(names, blocks, blocktypes):
     if DEBUG > 0:
-        print '\nBEGIN( process_regions )'
+        print('\nBEGIN( process_regions )')
         
     names['varimpl'] = ''
     names['vcuts']   = ''
     names['regdef']  = ''
     
-    if not blocks.has_key('region'):
+    if not ('region' in blocks):
         return
     
     cutdef  = '// regions\n'
@@ -2169,15 +2221,23 @@ def process_regions(names, blocks, blocktypes):
       
     for name, words, records in blocks['region']:
         if DEBUG > 0:
-            print 'REGION( %s )' % name
+            print('REGION( %s )' % name)
 
+        weight_value = None # default weight value = 1.0
+        
         # get cut strings
         values = []
         for record in records:
-            t = split(record)
+            t = str.split(record)
             token = t[0]
-            if token != 'select': continue
-            value = joinfields(t[1:], ' ')
+            
+            # check for weight
+            if token == 'weight':
+                weight_value = ' '.join(t[1:])
+                continue
+            
+            if not (token in ['select', 'reject']): continue
+            value = ' '.join(t[1:])
             values.append(value)
 
         cutdef += 'struct region_%s_s : public TNMThing\n' % name 
@@ -2188,7 +2248,6 @@ def process_regions(names, blocks, blocktypes):
         cutdef += '  TH1F*  hcount;\n'
         cutdef += '  bool   done;\n'
         cutdef += '  bool   result;\n'
-        cutdef += '  double weight;\n\n'
         cutdef += '  int    ncuts;\n\n'
         cutdef += '  std::string name() { return name_; }\n\n'
         cutdef += '  region_%s_s()\n' % name
@@ -2199,11 +2258,11 @@ def process_regions(names, blocks, blocktypes):
       hcount(0),
       done(false),
       result(false),
-      weight(1),
       ncuts(%d)
 ''' % (name, len(values))
            
         cutdef += '''  {
+    weight = 1.0; // default weight
     hcount = new TH1F("cutflow_%s", "", 1, 0, 1);
     hcount->SetCanExtend(1);
     hcount->SetStats(0);
@@ -2242,21 +2301,31 @@ def process_regions(names, blocks, blocktypes):
         cutdef += '  void count(string c)\t\t{ hcount->Fill(c.c_str(), weight); }\n'
         cutdef += '  void write(TFile* fout)\t{ fout->cd(); hcount->Write(); }\n'
         cutdef += '  void reset()\t\t\t{ done = false; result = false; }\n'
-        cutdef += '  bool operator()()\t\t{ return create(); }\n\n'     
-        cutdef += '  bool create()\n'
+        cutdef += '  bool operator()()\t\t{ return select(); }\n\n'     
+        cutdef += '  bool select()\n'
         cutdef += '  {\n'
         cutdef +='''    if ( done ) return result;
     done   = true;
     result = false;
     count("none");
 
-'''       
+'''
         for value in values:
             # convert to C++
             statement = convert2cpp(value, blocktypes, blocktype='region')
-            statement = change_to_internal_name(statement, blocks)                          
+            statement = change_to_internal_name(statement, blocks)
+
             cutdef += '%sif ( !(%s) ) return false;\n' % (tab4, statement)
             cutdef += '%scount("%s");\n\n' % (tab4, value) #nip.sub('', value))
+
+        # handle weight statement
+        if weight_value != None:
+            weight_statement = convert2cpp(weight_value,
+                                               blocktypes,
+                                               blocktype='region')
+            weight_statement = change_to_internal_name(weight_statement, blocks)
+            cutdef += '%sweight  = %s;\n' % (tab4, weight_statement)
+            
         cutdef += '%stotal  += weight;\n'  % tab4
         cutdef += '%sdtotal += weight * weight;\n\n'  % tab4
         cutdef += '%s// NB: remember to update result\n' % tab4
@@ -2273,7 +2342,7 @@ def main():
     # -----------------------------------------------------
     # check if setup.sh has been sourced
     # -----------------------------------------------------
-    if not os.environ.has_key("ADL2TNM_PATH"):
+    if not ("ADL2TNM_PATH" in os.environ):
         boohoo('''
     please source setup.sh in adl2tnm to define
     ADL2TNM_PATH
@@ -2435,33 +2504,33 @@ cp $ADL2TNM_PATH/downloads/%(adaptername)s.cc src/
 
 
     # update linkdef
-    linkdef = strip(os.popen('find * -name "linkdef*"').read())
+    linkdef = str.strip(os.popen('find * -name "linkdef*"').read())
     if linkdef != '':
         names['linkdef'] = linkdef
-        record = strip(os.popen('grep %(name)s_s %(linkdef)s' % names).read())
+        record = str.strip(os.popen('grep %(name)s_s %(linkdef)s' % names).read())
         if record == '':
-            print 'update linkdef'
-            record = strip(open(linkdef).read())
-            records= split(record, '\n')[:-1]
+            print('update linkdef')
+            record = str.strip(open(linkdef).read())
+            records= str.split(record, '\n')[:-1]
             records.append('#pragma link C++ class TNMThing;' % names)
             records.append('#pragma link C++ class %(name)s_s;' % names)            
             records.append('#pragma link C++ class TNMObject;' % names)
             records.append('#pragma link C++ class vector<TNMObject>;' % names)
             records.append('')
             records.append('#endif')
-            record = joinfields(records, '\n')
+            record = '\n'.join(records)
             open(linkdef, 'w').write(record)
 
 
     # update Makefile
-    makefile = strip(os.popen('find * -name "Makefile*"').read())
+    makefile = str.strip(os.popen('find * -name "Makefile*"').read())
     if makefile != '':
         names['makefile'] = makefile
-        record = strip(os.popen('grep %(name)s_s %(makefile)s' % names).read())
+        record = str.strip(os.popen('grep %(name)s_s %(makefile)s' % names).read())
         if record == '':
-            print 'update Makefile'
+            print('update Makefile')
             names['makefile'] = makefile
-            record = strip(open(makefile).read())
+            record = str.strip(open(makefile).read())
             tnm    = re.compile('tnm.h.*$', re.M)
             record = tnm.sub('tnm.h $(incdir)/%(name)s_s.h' % names, record)
             open(makefile, 'w').write(record)    
@@ -2470,5 +2539,5 @@ try:
     main()
 except KeyboardInterrupt:
     print
-    print "ciao!"
+    print("ciao!")
     

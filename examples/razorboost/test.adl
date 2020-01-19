@@ -18,52 +18,6 @@ object AK4jets
   select pt > 30
   select |eta| < 2.4
 
-object AK8jets
-  take FatJet
-  select pt > 200
-  select |eta| < 2.4
-
-# b-tagged jets - medium
-object bjets_medium
-  take AK4jets
-  select btagDeepB > 0.4941
-
-object Wjets_masstag
-  take AK8jets
-  select msoftdrop [] 65 105
-
-# W jets - W-tagged
-object Wjets
-  take Wjets_masstag
-  select tau2 / tau1 <= 0.4
-
-object muons_veto
-  take Muon
-  select pt > 5
-  select |eta| < 2.4
-  select softId == 1
-  select miniPFRelIso_all < 0.2
-  select |dxy| < 0.2
-  select |dz| < 0.5
-
-object electrons_veto
-  take Electron
-  select pt > 5
-  select |eta| < 2.5
-  select miniPFRelIso_all < 0.1
-  select |dxy| < 0.05
-  select |dz| < 0.1
-
-#object leptons_veto
-#  take electrons_veto
-#  take muons_veto
-
-object taus_veto
-  take Tau
-  select pt > 18    # from 2016 AN Table 12
-  select |eta| < 2.5   # from 2016 AN Table 12
-  select idMVAnewDM2017v2 >= 4
-
 # missing transverse energy
 object met
   take MET
@@ -74,47 +28,17 @@ object met
 object megajets
   take fmegajets(AK4jets)
 
-
 ### EVENT VARIABLES
 
 define MR = fMR(megajets)
 define R2 = sqrt(fMTR(megajets, met) / MR)
-define dphimegajets = dPhi(megajets[0], megajets[1])
-define lepton_count = electrons_veto.size + muons_veto.size
 
 ### EVENT SELECTION
-# Boosted categories
 
-# Boost pre-selection cuts
 region preselection
-  select AK4jets.size >= 3
-  select AK8jets.size >= 1
+  weight fweight(AK4jets)
+  select AK4jets.size
+  >= 3
   select MR > 800
   select R2 > 0.08
-
-# W category signal and control regions
-
-region W_S
-  select preselection
-  select lepton_count == 0
-  select taus_veto.size == 0
-  select bjets_medium.size >= 1
-  select Wjets.size >= 1
-  select dphimegajets < 2.8
-
-region electrons_veto_counter
-  select electrons_veto.size > 0
-  select electrons_veto.size > 1
-  select electrons_veto.size > 2
-  
-region muons_veto_counter
-  select muons_veto.size > 0
-  select muons_veto.size > 1
-  select muons_veto.size > 2
-
-region leptons_veto_counter
-  select lepton_count > 0
-  select lepton_count > 1
-  select lepton_count > 2
-
 
