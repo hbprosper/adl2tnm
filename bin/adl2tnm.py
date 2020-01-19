@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #--------------------------------------------------------------------------------
 # Description: Prototype transpiler of a ADL description to a TNM analyzer
 # Created: 12-Dec-2017 Harrison B. Prosper & Sezen Sekmen
@@ -20,12 +20,14 @@
 #          17-Jan-2020 HBP 1. make compatible with Python 3
 #                          2. handle weight statement
 #                          3. write out selected regions to a TTree
+#          19-Jan-2020 HBP more fixes for Python 3
 #--------------------------------------------------------------------------------
 import sys, os, re, optparse, urllib, subprocess
 from time import ctime
 #--------------------------------------------------------------------------------
 VERSION = 'v2.1.0'
 DEBUG  = 0
+print(sys.version)
 
 # ADL block types
 BLOCKTYPES = ['info', 'function', 'object', 'define', 'region']
@@ -519,7 +521,8 @@ def fill_EXTERNALS(filename='../variables.txt'):
     file %s not found
         ''' % filename)
         
-    records = map(str.strip, open(filename).readlines())
+    records = [str.strip(x) for x in
+                   open(filename).readlines()]
 
     # skip header
     jj = 0
@@ -564,7 +567,7 @@ def fill_EXTERNALS(filename='../variables.txt'):
             
         #print(vtype, oname, fname)
         
-        if not OBJECTS.has_key(oname):
+        if not (oname in OBJECTS):
             OBJECTS[oname] = {}
         OBJECTS[oname][fname] = vtype
         SYMBOLS.add(oname)
@@ -593,7 +596,8 @@ def buildAdapterBody(names, partial=False, filename='../variables.txt'):
     file %s not found
         ''' % filename)
         
-    records = map(str.strip, open(filename).readlines())
+    records = [str.strip(x) for x in
+                   open(filename).readlines()]
 
     # skip header
     jj = 0
@@ -635,7 +639,7 @@ def buildAdapterBody(names, partial=False, filename='../variables.txt'):
         ##DB       
         #print("\toname( %s )\tfname( %s ) %s" % (oname, fname, a_singleton))
         
-        if not OBJ.has_key(oname): OBJ[oname] = {'singleton': a_singleton,
+        if not (oname in OBJ): OBJ[oname] = {'singleton': a_singleton,
                                                  'pt':  None,
                                                  'eta': None,
                                                  'phi': None,
@@ -963,7 +967,6 @@ def extractBlocks(filename):
         
     from copy import deepcopy
     import re
-    from string import rstrip, split, strip
 
     #--------------------------------------------
     # read ADL file
@@ -1026,7 +1029,7 @@ def extractBlocks(filename):
                 print("\n=>Found( %s, %s )" % (btype, bname))
    
             # fall on sword if we have duplicate block names
-            if blocks.has_key(bname):
+            if bname in blocks:
                 boohoo('duplicate block name %s at line'\
                            '\n%4d %s\n' % (bname, lineno, record))
                             
@@ -1090,7 +1093,7 @@ def extractBlocks(filename):
     for key in blocks.keys():
         block = blocks[key]
         blocktype = block['type']
-        if not blockmap.has_key(blocktype):
+        if not (blocktype in blockmap):
             blockmap[blocktype] = []
         body  = block['body']
         words = ' '.join(getWords(body))
@@ -1110,14 +1113,14 @@ def extractBlocks(filename):
 
     # sort object blocks so that a block that depends on other blocks
     # is placed after those blocks.
-    if blockmap.has_key('object'):
+    if 'object' in blockmap:
         blockmap['object'] = sortObjects(blockmap['object'])
 
     
     # sort region blocks so that a block that depends on other blocks
     # is placed after those blocks.
  
-    if blockmap.has_key('region'):
+    if 'region' in blockmap:
         blockmap['region'] = sortObjects(blockmap['region'])
 
     #--------------------------------------------            
@@ -1126,7 +1129,7 @@ def extractBlocks(filename):
     #--------------------------------------------
     recs = []
     for btype in ['object', 'define', 'region']:
-        if not blockmap.has_key(btype): continue
+        if not (btype in blockmap): continue
         for name, words, records in blockmap[btype]:
             recs += records
     onerecord = ' '.join(recs)
@@ -1182,7 +1185,7 @@ def extractBlocks(filename):
     checkForErrors(orig_records)
     
     # add original order of regions to blockmap
-    if blockmap.has_key('region'):
+    if 'region' in blockmap:
         regmap = {}
         for ii, (regname, _, _) in enumerate(blockmap['region']):
             regmap[regname] = ii
@@ -1197,7 +1200,7 @@ def extractBlocks(filename):
 def printBlocks(blocks):
     out = open('blocks.log', 'w')
     for blocktype in BLOCKTYPES:
-        if not blocks.has_key(blocktype): continue
+        if not (blocktype in blocks): continue
         record = "[%s]" % blocktype
         out.write('%s\n' % record)
         record = '-'*80
@@ -1235,7 +1238,7 @@ def process_functions(names, blocks, blocktypes):
     if DEBUG > 0:
         print('\nBEGIN( process_function )')
     
-    if not blocks.has_key('function'):
+    if not ('function' in blocks):
         names['includes']  = ''
         names['namespaces'] = ''
         return
@@ -1580,7 +1583,7 @@ def convert2cpp(record, blocktypes,
             record   = edit.sub(newfield, record)
             
         # if name is that of a region, fix record accordingly
-        if blocktypes.has_key('region'):
+        if 'region' in blocktypes:
             if name in blocktypes['region']:
                 edit = re.compile(r'(?<!region[_])\b%s\b' % name)
                 newname = 'region_%s()' % name
@@ -1588,7 +1591,7 @@ def convert2cpp(record, blocktypes,
                     print("\tregion: name( %s ) newname( %s )" % (name, newname))
                 record = edit.sub(newname, record)
                 
-        if blocktypes.has_key('define_type'):
+        if 'define_types' in blocktypes:
             # if name is that of a define, type cast for TNMObject
             # unless the object is being passed to functions such as
             # mass(*)
@@ -1683,12 +1686,12 @@ def convert2cpp(record, blocktypes,
     return record
 
 def change_to_internal_name(statement, blocks):
-    if not blocks.has_key('function_info'): return statement
+    if not ('function_info' in blocks): return statement
 
     functions = blocks['function_info']
     words = swords.findall(statement)
     for word in words:
-        if not functions.has_key(word): continue
+        if not (word in functions): continue
         rtype, intname, extname, argtypes = functions[word]
         cmd = re.compile(r'\b%s\b' % extname)
         statement = cmd.sub(intname, statement)
@@ -1725,7 +1728,7 @@ def process_object_body(name, records, TAB, blocks, blocktypes):
     objdef      = ''
     singleton_object = False
     
-    for index in xrange(len(records)):
+    for index in range(len(records)):
         
         token, value, next_token = decode_and_look_ahead(index, records)
         record = records[index]
@@ -1940,9 +1943,8 @@ def process_objects(names, blocks, blocktypes):
     if DEBUG > 0:
         print('\nBEGIN( process_objects )')
 
-    if not blocks.has_key('object'): return  ''
+    if not ('object' in blocks): return  ''
         
-    from string import lower
     tab2 = ' '*2
     tab4 = ' '*4
     tab6 = ' '*6
@@ -2106,7 +2108,7 @@ def process_defines(names, blocks, blocktypes):
     for name, words, records in blocks['define']:    
         vdefines += '  defines.push_back(&%s);\n' % name
 
-    if blocks.has_key('function_info'):
+    if 'function_info' in blocks:
         functions = blocks['function_info']
         fnames    = set(functions.keys())
     else:
@@ -2170,7 +2172,7 @@ def process_defines(names, blocks, blocktypes):
         ws = swords.findall(statement)
         deftrig = ''                
         for key in ws:
-            if not deftypemap.has_key(key): continue
+            if not (key in deftypemap): continue
             deftype = deftypemap[key]
             if deftype == 'float': continue
             cmd = re.compile(r'\b%s\b' % key)
@@ -2432,7 +2434,7 @@ cp $ADL2TNM_PATH/downloads/TNMObject.cc src/
     blocktypes = {}
     for btype in BLOCKTYPES:
         blocktypes[btype] = set()
-        if not blocks.has_key(btype): continue
+        if not (btype in blocks): continue
         for name, words, records in blocks[btype]:
             blocktypes[btype].add(name)
             
@@ -2481,7 +2483,7 @@ cp $ADL2TNM_PATH/downloads/%(adaptername)s.cc src/
     # --------------------------------------------
 
     # write summaries of regions in same order as in ADL file
-    if blocks.has_key('print_order'):
+    if 'print_order' in blocks:
         order = blocks['print_order']
         tab = '  '
         s = ''
