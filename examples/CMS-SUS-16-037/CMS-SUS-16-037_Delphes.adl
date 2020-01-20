@@ -1,0 +1,66 @@
+#info analysis
+#  title "Search for supersymmetry in pp collisions at sqrts = 13 TeV in the single-lepton 
+final state using the sum of masses of large-radius jets""
+#  experiment CMS
+#  id SUS-16-037
+#  publication Phys. Rev. Lett. 119 (2017) 151802
+#  sqrtS 13.0
+#  lumi 35.9
+#  arXiv 1705.04673  
+#  hepdata 
+#  doi 10.1103/PhysRevLett.119.151802
+
+object jets
+  take Jet
+  select pT > 30  
+  select abs(Eta) < 2.4
+
+object bjets
+  take jets
+  select BTag == 1
+
+object largejets
+  take antikT(jets, 1.4)
+  
+object muons
+  take Muon
+  select pT > 20
+  select abs(eta) < 2.4
+  # Modified mini isolation.  Cone size decreases with 1/pT.
+
+object electrons
+  take Electron
+  select pT > 20
+  select abs(eta) < 2.5
+  # Modified mini isolation.  Cone size decreases with 1/pT.
+
+object leptons
+  take electrons
+  take muons
+  
+object MET
+  take MissingET
+
+# Can't use tracks with Delphes.  Can write in ADL but no time now.
+#object vetotracks
+#  take Track
+
+define MJ = sum(largejets.m)
+define MTl = sqrt( 2*leptons[0].pT * MET*(1-cos(MET.phi - leptons[0].phi )))
+define HT = sum(jets.pT)
+define ST = HT + leptons[0].pT
+
+# Baseline selection
+region baseline
+  select size(leptons) == 1
+  select ST > 500
+  select MET.pT > 200
+  select size(jets) >= 6
+  select size(bjets) >= 1
+
+# signal region  
+region SR
+  select MTl > 140
+  select MJ > 400
+  bin MET.pT 200 350 500
+

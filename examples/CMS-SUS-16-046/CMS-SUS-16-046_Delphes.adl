@@ -1,0 +1,49 @@
+#info analysis
+#  title "Search for gauge-mediated supersymmetry in events with at least one photon and 
+# missing transverse momentum in pp collisions at s√= 13 TeV"
+#  experiment CMS
+#  id SUS-16-046
+#  publication Phys. Lett. B 780 (2018) 118
+#  sqrtS 13.0
+#  lumi 35.9
+#  arXiv 1711.08008
+#  hepdata 
+#  doi 10.1016/j.physletb.2018.02.045
+
+object MET
+  take MissingET
+
+object jets
+  take Jet j
+  select pT > 30  
+  select abs(Eta) < 3
+  select pT > 100 ? dR(j, MET) > 0.3 
+  # The following was written implicitly (as jet isolation).
+  # There is an explicit requirement on photon isolation, so taking that one.
+  # This might even be a relic from 046
+  #reject dR(j, photons) < 0.4 # can use the eta-phi version to avoid j
+
+object photons
+  take Photon p
+  select pT > 15
+  select abs(eta) < 1.44
+  reject dR(p, jets) < 0.5 
+  # isolation on dR = 0.3
+
+# Variables
+define MTpho = sqrt( 2*photons[0].pT * MET*(1-cos(MET.phi - photons[0].phi )))
+define STpho = sum(photons.pT) + MET.pT
+
+# signal regions
+region SRs
+  select size(photons) >= 1
+  select photons[0].pT > 160 
+  # No explicit requirement on leptons or jets
+  select MET.pT > 300
+  select MTpho > 300
+  select STpho > 600
+  bin STpho 600 800 100 1300
+
+
+
+

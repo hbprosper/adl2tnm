@@ -1,0 +1,96 @@
+#info analysis
+#  title "Search for supersymmetry in events with one lepton and multiple jets exploiting 
+# the angular correlation between the lepton and the missing transverse momentum in 
+# proton-proton collisions at sqrt{s} = 13 TeV"
+#  experiment CMS
+#  id SUS-16-042
+#  publication Phys. Lett. B 780 (2018) 384
+#  sqrtS 13.0
+#  lumi 35.9
+#  arXiv 1709.09814
+#  hepdata 
+#  doi 10.1016/j.physletb.2018.03.028
+
+# OBJECTS
+object muons
+  take Muon
+  select pT > 25
+  select abs(eta) < 2.1
+  #select dxy < 2 ?
+  # relative isolation Irel < 0.2
+
+object electrons
+  take Electron
+  select pT > 25
+  select abs(eta) < 1.44
+  #select dxy < 2 ?
+  # relative isolation Irel < 0.1
+
+object leptons
+  take electrons
+  take muons
+
+# We don't get relative isolation in Delphes
+object vetoelectrons
+  take Electron
+  select pT [] 10 25
+  # looser relative isolation Irel < 0.4. 
+
+object vetomuons
+  take Muon
+  select pT [] 10 25
+  # looser relative isolation Irel < 0.4. 
+
+#object vetoleptons
+#  take vetoelectrons
+#  take vetomuons
+
+# Can't do tracks in Delphes
+#object vetotracks
+#  take Track t
+#  reject dR(t, leptons) < 0.2
+#  select pT > 5
+#  select size(leptons) > 0 ? leptons[0].q + q == 0
+
+object jets
+  take Jet j
+  select pT > 30  
+  select abs(Eta) < 2.4
+  reject dR(j, leptons) < 0.4 
+
+object bjets
+  take jets
+  select BTag == 1
+  
+object MET
+  take MissingET
+
+  
+# VARIABLES
+define LT = leptons[0].pT + MET.pT
+define HT = sum(jets.pT)
+define W = lepton[0] + MET
+define dphilW = dphi(lepton[0], W)
+
+# EVENT SELECTION
+region baseline
+  select size(leptons) == 1
+  select vetoleptons == 0
+  # select vetotracks == 0
+  select size(jets) >= 5
+  select jets[0].pT > 80
+  select jets[1].pT > 80
+  select LT > 250
+  select HT > 500
+  select dphilW > 0.5
+
+# Many bins njets, LT, dphilW, HT
+region zerob
+  select baseline
+  select size(bjets) == 0
+
+# Many bins njets, nb, LT, dphilW, HT
+region multib
+  select baseline
+  select size(bjets) > 0
+  select size(jets) >= 6

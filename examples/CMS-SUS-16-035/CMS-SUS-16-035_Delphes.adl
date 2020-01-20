@@ -1,0 +1,80 @@
+#info analysis
+#  title "Search for physics beyond the standard model in events with two leptons of same 
+sign, missing transverse momentum and jets in proton-proton collisions at sqrts = 13 TeV"
+#  experiment CMS
+#  id SUS-16-035
+#  publication Eur. Phys. J. C 77 (2017) 578
+#  sqrtS 13.0
+#  lumi 35.9
+#  arXiv 1704.07323  
+#  hepdata 
+#  doi 10.1140/epjc/s10052-017-5079-z
+
+# OBJECTS
+
+object muons
+  take Muon
+  select pT > 10
+  select abs(eta) < 2.4
+  select DO < 0.5
+  select DZ < 1
+  # define Imini = relative isolation
+  # define pTratio = pT / closestjet.pT
+  # define pTrel = (abs((closestjet.p - p) x p)) / abs(closestjet.p - p)
+  # select Imini < 0.16 and (pTratio > 0.76 or pTrel > 7.2)
+
+object electrons
+  take Electron
+  select pT > 15
+  select abs(eta) < 2.5
+  select DO < 0.5
+  select DZ < 1
+  # define Imini = relative isolation
+  # define pTratio = pT / closestjet.pT
+  # define pTrel = (abs((closestjet.p - p) x p)) / abs(closestjet.p - p)
+  # select Imini < 0.12 and (pTratio > 0.80 or pTrel > 7.2)
+
+object leptons
+  take electrons
+  take muons
+
+object jets
+  take Jet j
+  select pT > 40  
+  select abs(Eta) < 2.4
+  reject dR(j, leptons) < 0.4 
+
+object bjets
+  take Jet
+  select pT > 25
+  select abs(Eta) < 2.4
+  select BTag == 1
+  
+object MET
+  take MissingET
+
+#object tracks
+#  take Track
+# Cutflow table gives ele, mu and had tracks separately - can do that
+# Let's turn the leptonic tracks off for the overlap study
+# select pT > 5 ? dR(lepton, Track) < 0.2 : dR(lepton, Track) >= 0.2
+# for hadronic tracks:
+#  select pT > 10
+#  define MTtr = sqrt( 2*track[0].pT * MET*(1-cos(MET.phi - track[0].phi )))
+#  select MTtr > 100
+
+define mll02 = m(leptons[0] + leptons[2])
+define mll12 = m(leptons[1] + leptons[2])
+
+region baseline
+  select size(leptons) >= 2
+  select abs(leptons[0].charge + leptons[1].charge) == 2
+  select m(leptons[0] + leptons[1]) > 8
+  select size(jets) >= 2
+  select MET.pT > 50
+  reject size(leptons > 2) ? mll02 < 12 or mll02 [] 76 106 or mll12 < 12 or mll12 [] 76 106  
+
+# There are a large number of signal regions 
+
+
+

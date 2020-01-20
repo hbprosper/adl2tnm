@@ -1,0 +1,96 @@
+#info analysis
+#  title "Search for electroweak production of charginos and neutralinos in WH events in 
+# proton-proton collisions at sqrt(s) = 13TeV"
+#  experiment CMS
+#  id SUS-16-043
+#  publication JHEP 11 (2017) 029
+#  sqrtS 13.0
+#  lumi 35.9
+#  arXiv 1706.09933
+#  hepdata 
+#  doi 10.1007/JHEP11(2017)029
+
+# OBJECTS
+object muons
+  take Muon
+  select pT > 25
+  select abs(eta) < 2.1
+  #select dxy < 2 ?
+  # isolation, pTsum < 5, DR < 0.3
+
+object electrons
+  take Electron
+  select pT > 30
+  select abs(eta) < 1.44
+  #select dxy < 2 ?
+  # isolation, pTsum < 5, DR < 0.3
+
+object leptons
+  take electrons
+  take muons
+
+# We don't get relative isolation in Delphes
+object vetoelectrons
+  take Electron
+  select pT [] 5 30
+  # pTsum / pT < 0.1 where where pTsum calculated from 
+  # DR = 0.2 for electron.pT =< 50
+  # DR = max(0.5, 10/electron.pT) for electron.pT > 50
+
+object vetomuons
+  take Muon
+  select pT [] 5 25
+  # pTsum / pT < 0.1 where pTsum is calculated from 
+  # DR = 0.2 for muon.pT =< 50
+  # DR = max(0.5, 10/muon.pT) for muon.pT > 50
+
+object vetoleptons
+  take vetoelectrons
+  take vetomuons
+
+object vetotaus
+  take Jet
+  select TauTag == 1
+  select pT > 20
+
+object jets
+  take Jet j
+  select pT > 30  
+  select abs(Eta) < 2.4
+  reject dR(j, leptons) < 0.4 
+
+object bjets
+  take jets
+  select BTag == 1
+  
+object MET
+  take MissingET
+
+# Can't do tracks in Delphes.  Not necessary for overlap study.
+#object vetotracks
+#  take Track t
+#  reject dR(t, leptons) < 0.2
+#  select pT > 10
+#  select size(leptons) > 0 ? leptons[0].q + q == 0
+  
+# VARIABLES
+define MTl = sqrt( 2*leptons[0].pT * MET*(1-cos(MET.phi - leptons[0].phi )))
+define MCT = 2 * bjets[0].pT * bjets[1] * (1 + cos( dphi( bjets[0], bjets[1] )))
+
+# EVENT SELECTION
+# (see Table 1 in paper)
+region preselection
+  select size(leptons) == 1
+  reject size(vetoleptons) > 1
+  # select size(vetotracks) == 0
+  select size(vetotaus) == 0
+  select size(bjets) == 2
+  select MET.pT > 125
+  select MTl > 50
+
+region signal
+  select m(bjets[0] + bjets[1]) [] 90 150
+  select MTl > 150
+  select MCT > 170
+  bin MET.pT 125 200
+  
