@@ -4,7 +4,7 @@ import os, re
 import sys, os, re, optparse, urllib, subprocess
 from time import ctime
 #-----------------------------------------------------------
-print(sys.version)
+print("\n%s" % sys.version)
 VERSION = "v1.0.0"
 USAGE ='''
     Usage:
