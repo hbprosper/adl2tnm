@@ -1,0 +1,44 @@
+# arxiv:1710.11188, CMS SUSY stop (resolved and boosted)
+
+info analysis
+# Details about experiment
+  experiment CMS
+  id SUS-16-050
+  publication Phys.Rev. D97 (2018) no.1, 012007 
+  sqrtS 13.0
+  lumi 35.9
+  arXiv 1710.11188
+  hepdata https://www.hepdata.net/record/ins1633588
+  doi 10.1103/PhysRevD.97.012007
+
+### OBJECT SELECTIONS
+
+object AK4jets
+  take Jet
+  select pt > 30
+  select |eta| < 2.4
+
+# missing transverse energy
+object met
+  take MET
+
+# Megajets are 4-vectors, each consisting of multiple jet.
+# Each event with njets > 0 is partitioned into 2 megajets.
+
+object megajets
+  take fmegajets(AK4jets)
+
+### EVENT VARIABLES
+
+define MR = fMR(megajets)
+define R2 = sqrt(fMTR(megajets, met) / MR)
+
+### EVENT SELECTION
+
+region preselection
+  weight fweight(AK4jets)
+  select AK4jets.size
+  >= 3
+  select MR > 800
+  select R2 > 0.08
+

@@ -1,0 +1,127 @@
+info analysis
+  title "Search for new physics in events with two soft oppositely charged leptons and missing transverse momentum in proton-proton collisions at sqrts = 13 TeV "
+  experiment CMS
+  id SUS-16-048
+  publication Phys. Lett. B 782 (2018) 440
+  sqrtS 13.0
+  lumi 35.9
+  arXiv 1801.01846
+  hepdata 
+  doi 10.1016/j.physletb.2018.05.062
+
+# ANALYSIS OBJECTS
+object muons
+  take Muon
+  select pT [] 3.5 30
+  select abs(eta) < 2.4
+  # e.g. select IsolationVarRhoCorr < 0.1
+  # Contained in the provided CMS efficiencies
+
+object electrons
+  take Electron
+  select pT [] 3.5 30
+  select abs(eta) < 2.5
+  # e.g. select IsolationVarRhoCorr < 0.1
+  # Contained in the provided CMS efficiencies
+
+object leptons
+  take electrons
+  take muons
+  
+object jets
+  take Jet
+  select pT > 25  
+  select abs(Eta) < 2.4
+
+object bjets
+  take jets
+  select BTag == 1
+
+object MET
+  take MissingET
+
+# EVENT VARIABLES
+define dilepton = leptons[0] + leptons[1]
+define dielectron = electrons[0] + electrons[1]
+define dimuon = muons[0] + muons[1]
+define HT = sum(jets.pT)
+define MTl1 = sqrt( 2*leptons[0].pT * MET.MET*(1-cos(MET.phi - leptons[0].phi )))
+define MTl2 = sqrt( 2*leptons[1].pT * MET.MET*(1-cos(MET.phi - leptons[1].phi )))
+define Mtautau = fMtautau(leptons[0], leptons[1], MET)
+
+# EVENT SELECTION
+
+# Dimuon selection
+# This selection follows the cutflow table in LH recasting twiki
+# https://phystev.cnrs.fr/wiki/_detail/2019:groups:tools:cms-sus-16-048_cutflow.png?id=2019%3Agroups%3Atools%3Arecastcmp
+region CharginoDimuonPresel
+  weight xsec 0.688016
+  select size(muons) == 2
+  select muons[0].pT [] 5 30
+  select muons[0].charge * muons[1].charge == -1
+  select dimuon.pT > 3 
+  select dimuon.mass [] 4 50
+  select dimuon.mass ][ 9 10.5
+  select MET.MET [] 125 200
+  weight trigger 0.65
+  select size(jets) >= 0
+  select size(jets) >= 1
+  select HT > 100
+  select (MET.MET / HT) > 0.6 and (MET.MET / HT) < 1.4
+  select size(bjets) == 0
+  select Mtautau ][ 0 160 
+  select MTl1 < 70 and MTl2 < 70
+
+# Additional selections from the analysis (not included in the recast study)
+
+# Dilepton preselection
+#region DileptonPresel
+  # This selection follows Table 1 in the paper 
+  # (for the time being, except for the isolation criteria)
+#  select size(leptons) == 2
+#  select size(electrons) == 2 or size(muons) == 2
+#  select leptons[0].charge * leptons[1].charge == -1
+#  select leptons[0].pT > 5
+#  select leptons[1].pT > 5
+#  select size(bjets) == 0
+#  select size(electrons) == 2 or size(muons) == 2 ? mass(dilepton) [] 4 9 : mass(dilepton) [] 10.5 50
+#  select dilepton.pT > 3
+#  select size(muons) == 2 ? MET.pT > 125 : MET.pT > 200
+#  select MET.pT / HT [] 0.6 1.4
+#  select HT > 100
+#  select MTl1 < 70 and MTl2 < 70
+
+# Dielectron selection
+#region CharginoDielectronPresel
+# This selection follows the cutflow table in the twiki
+#  select size(electrons) == 2
+#  select electrons[0].pT [] 5 30
+#  select electrons[0].charge * electrons[1].charge == -1
+#  select dielectron.pT > 3 
+#  select dielectron.mass [] 4 9 or dielectron.mass [] 10.5 50
+#  reject dielectron.mass [] 9 10.5
+#  select MET.pT [] 125 200
+#  select MET.pT / HT [] 0.6 1.4
+#  select size(jets) >= 1
+#  select HT > 100
+#  select size(bjets) == 0
+#  reject Mtautau [] 0 160 
+#  select MTl1 < 70 and MTl2 < 70
+
+# Stop dimuon preselection
+#region StopDimuonPresel
+#  # This selection follows the cutflow table in the twiki
+#  select size(muons) == 2
+#  select muons[0].pT [] 5 30
+#  select muons[0].charge * muons[1].charge == -1
+#  select dimuon.pT > 3 
+#  select dimuon.mass [] 4 50
+#  reject dimuon.mass [] 9 10.5
+#  select MET.pT [] 125 200
+#  select MET.pT / HT [] 0.6 1.4
+#  select size(jets) >= 1
+#  select HT > 100
+#  select size(bjets) == 0
+#  reject Mtautau [] 0 160
+
+

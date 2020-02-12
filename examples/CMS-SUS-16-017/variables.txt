@@ -1,0 +1,413 @@
+Tree Events	Fri Jun 21 22:40:57 2019
+
+float	Events/CaloMET_phi	CaloMET_phi 1 
+float	Events/CaloMET_pt	CaloMET_pt 1 
+float	Events/CaloMET_sumEt	CaloMET_sumEt 1 
+float	Events/ChsMET_phi	ChsMET_phi 1 
+float	Events/ChsMET_pt	ChsMET_pt 1 
+float	Events/ChsMET_sumEt	ChsMET_sumEt 1 
+int	Events/Electron_charge	Electron_charge 10 nElectron
+uchar	Events/Electron_cleanmask	Electron_cleanmask 10 nElectron
+bool	Events/Electron_convVeto	Electron_convVeto 10 nElectron
+int	Events/Electron_cutBased	Electron_cutBased 10 nElectron
+int	Events/Electron_cutBased_Fall17_V1	Electron_cutBased_Fall17_V1 10 nElectron
+bool	Events/Electron_cutBased_HEEP	Electron_cutBased_HEEP 10 nElectron
+float	Events/Electron_deltaEtaSC	Electron_deltaEtaSC 10 nElectron
+float	Events/Electron_dr03EcalRecHitSumEt	Electron_dr03EcalRecHitSumEt 10 nElectron
+float	Events/Electron_dr03HcalDepth1TowerSumEt	Electron_dr03HcalDepth1TowerSumEt 10 nElectron
+float	Events/Electron_dr03TkSumPt	Electron_dr03TkSumPt 10 nElectron
+float	Events/Electron_dr03TkSumPtHEEP	Electron_dr03TkSumPtHEEP 10 nElectron
+float	Events/Electron_dxy	Electron_dxy 10 nElectron
+float	Events/Electron_dxyErr	Electron_dxyErr 10 nElectron
+float	Events/Electron_dz	Electron_dz 10 nElectron
+float	Events/Electron_dzErr	Electron_dzErr 10 nElectron
+float	Events/Electron_eCorr	Electron_eCorr 10 nElectron
+float	Events/Electron_eInvMinusPInv	Electron_eInvMinusPInv 10 nElectron
+float	Events/Electron_energyErr	Electron_energyErr 10 nElectron
+float	Events/Electron_eta	Electron_eta 10 nElectron
+uchar	Events/Electron_genPartFlav	Electron_genPartFlav 10 nElectron
+int	Events/Electron_genPartIdx	Electron_genPartIdx 10 nElectron
+float	Events/Electron_hoe	Electron_hoe 10 nElectron
+float	Events/Electron_ip3d	Electron_ip3d 10 nElectron
+bool	Events/Electron_isPFcand	Electron_isPFcand 10 nElectron
+int	Events/Electron_jetIdx	Electron_jetIdx 10 nElectron
+float	Events/Electron_jetRelIso	Electron_jetRelIso 10 nElectron
+uchar	Events/Electron_lostHits	Electron_lostHits 10 nElectron
+float	Events/Electron_mass	Electron_mass 10 nElectron
+float	Events/Electron_miniPFRelIso_all	Electron_miniPFRelIso_all 10 nElectron
+float	Events/Electron_miniPFRelIso_chg	Electron_miniPFRelIso_chg 10 nElectron
+float	Events/Electron_mvaFall17V1Iso	Electron_mvaFall17V1Iso 10 nElectron
+bool	Events/Electron_mvaFall17V1Iso_WP80	Electron_mvaFall17V1Iso_WP80 10 nElectron
+bool	Events/Electron_mvaFall17V1Iso_WP90	Electron_mvaFall17V1Iso_WP90 10 nElectron
+bool	Events/Electron_mvaFall17V1Iso_WPL	Electron_mvaFall17V1Iso_WPL 10 nElectron
+float	Events/Electron_mvaFall17V1noIso	Electron_mvaFall17V1noIso 10 nElectron
+bool	Events/Electron_mvaFall17V1noIso_WP80	Electron_mvaFall17V1noIso_WP80 10 nElectron
+bool	Events/Electron_mvaFall17V1noIso_WP90	Electron_mvaFall17V1noIso_WP90 10 nElectron
+bool	Events/Electron_mvaFall17V1noIso_WPL	Electron_mvaFall17V1noIso_WPL 10 nElectron
+float	Events/Electron_mvaFall17V2Iso	Electron_mvaFall17V2Iso 10 nElectron
+bool	Events/Electron_mvaFall17V2Iso_WP80	Electron_mvaFall17V2Iso_WP80 10 nElectron
+bool	Events/Electron_mvaFall17V2Iso_WP90	Electron_mvaFall17V2Iso_WP90 10 nElectron
+bool	Events/Electron_mvaFall17V2Iso_WPL	Electron_mvaFall17V2Iso_WPL 10 nElectron
+float	Events/Electron_mvaFall17V2noIso	Electron_mvaFall17V2noIso 10 nElectron
+bool	Events/Electron_mvaFall17V2noIso_WP80	Electron_mvaFall17V2noIso_WP80 10 nElectron
+bool	Events/Electron_mvaFall17V2noIso_WP90	Electron_mvaFall17V2noIso_WP90 10 nElectron
+bool	Events/Electron_mvaFall17V2noIso_WPL	Electron_mvaFall17V2noIso_WPL 10 nElectron
+float	Events/Electron_mvaTTH	Electron_mvaTTH 10 nElectron
+int	Events/Electron_pdgId	Electron_pdgId 10 nElectron
+float	Events/Electron_pfRelIso03_all	Electron_pfRelIso03_all 10 nElectron
+float	Events/Electron_pfRelIso03_chg	Electron_pfRelIso03_chg 10 nElectron
+float	Events/Electron_phi	Electron_phi 10 nElectron
+int	Events/Electron_photonIdx	Electron_photonIdx 10 nElectron
+float	Events/Electron_pt	Electron_pt 10 nElectron
+float	Events/Electron_r9	Electron_r9 10 nElectron
+float	Events/Electron_sieie	Electron_sieie 10 nElectron
+float	Events/Electron_sip3d	Electron_sip3d 10 nElectron
+int	Events/Electron_tightCharge	Electron_tightCharge 10 nElectron
+int	Events/Electron_vidNestedWPBitmap	Electron_vidNestedWPBitmap 10 nElectron
+float	Events/FatJet_area	FatJet_area 8 nFatJet
+float	Events/FatJet_btagCMVA	FatJet_btagCMVA 8 nFatJet
+float	Events/FatJet_btagCSVV2	FatJet_btagCSVV2 8 nFatJet
+float	Events/FatJet_btagDeepB	FatJet_btagDeepB 8 nFatJet
+float	Events/FatJet_btagHbb	FatJet_btagHbb 8 nFatJet
+float	Events/FatJet_deepTagMD_H4qvsQCD	FatJet_deepTagMD_H4qvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_HbbvsQCD	FatJet_deepTagMD_HbbvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_TvsQCD	FatJet_deepTagMD_TvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_WvsQCD	FatJet_deepTagMD_WvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_ZHbbvsQCD	FatJet_deepTagMD_ZHbbvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_ZHccvsQCD	FatJet_deepTagMD_ZHccvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_ZbbvsQCD	FatJet_deepTagMD_ZbbvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_ZvsQCD	FatJet_deepTagMD_ZvsQCD 8 nFatJet
+float	Events/FatJet_deepTagMD_bbvsLight	FatJet_deepTagMD_bbvsLight 8 nFatJet
+float	Events/FatJet_deepTagMD_ccvsLight	FatJet_deepTagMD_ccvsLight 8 nFatJet
+float	Events/FatJet_deepTag_TvsQCD	FatJet_deepTag_TvsQCD 8 nFatJet
+float	Events/FatJet_deepTag_WvsQCD	FatJet_deepTag_WvsQCD 8 nFatJet
+float	Events/FatJet_deepTag_ZvsQCD	FatJet_deepTag_ZvsQCD 8 nFatJet
+float	Events/FatJet_eta	FatJet_eta 8 nFatJet
+int	Events/FatJet_jetId	FatJet_jetId 8 nFatJet
+float	Events/FatJet_mass	FatJet_mass 8 nFatJet
+float	Events/FatJet_msoftdrop	FatJet_msoftdrop 8 nFatJet
+float	Events/FatJet_n2b1	FatJet_n2b1 8 nFatJet
+float	Events/FatJet_n3b1	FatJet_n3b1 8 nFatJet
+float	Events/FatJet_phi	FatJet_phi 8 nFatJet
+float	Events/FatJet_pt	FatJet_pt 8 nFatJet
+float	Events/FatJet_rawFactor	FatJet_rawFactor 8 nFatJet
+int	Events/FatJet_subJetIdx1	FatJet_subJetIdx1 8 nFatJet
+int	Events/FatJet_subJetIdx2	FatJet_subJetIdx2 8 nFatJet
+float	Events/FatJet_tau1	FatJet_tau1 8 nFatJet
+float	Events/FatJet_tau2	FatJet_tau2 8 nFatJet
+float	Events/FatJet_tau3	FatJet_tau3 8 nFatJet
+float	Events/FatJet_tau4	FatJet_tau4 8 nFatJet
+bool	Events/Flag_BadChargedCandidateFilter	Flag_BadChargedCandidateFilter 1 
+bool	Events/Flag_BadChargedCandidateSummer16Filter	Flag_BadChargedCandidateSummer16Filter 1 
+bool	Events/Flag_BadPFMuonFilter	Flag_BadPFMuonFilter 1 
+bool	Events/Flag_BadPFMuonSummer16Filter	Flag_BadPFMuonSummer16Filter 1 
+bool	Events/Flag_CSCTightHalo2015Filter	Flag_CSCTightHalo2015Filter 1 
+bool	Events/Flag_CSCTightHaloFilter	Flag_CSCTightHaloFilter 1 
+bool	Events/Flag_CSCTightHaloTrkMuUnvetoFilter	Flag_CSCTightHaloTrkMuUnvetoFilter 1 
+bool	Events/Flag_EcalDeadCellBoundaryEnergyFilter	Flag_EcalDeadCellBoundaryEnergyFilter 1 
+bool	Events/Flag_EcalDeadCellTriggerPrimitiveFilter	Flag_EcalDeadCellTriggerPrimitiveFilter 1 
+bool	Events/Flag_HBHENoiseFilter	Flag_HBHENoiseFilter 1 
+bool	Events/Flag_HBHENoiseIsoFilter	Flag_HBHENoiseIsoFilter 1 
+bool	Events/Flag_HcalStripHaloFilter	Flag_HcalStripHaloFilter 1 
+bool	Events/Flag_METFilters	Flag_METFilters 1 
+bool	Events/Flag_chargedHadronTrackResolutionFilter	Flag_chargedHadronTrackResolutionFilter 1 
+bool	Events/Flag_ecalBadCalibFilter	Flag_ecalBadCalibFilter 1 
+uchar	Events/Flag_ecalBadCalibFilterV2	Flag_ecalBadCalibFilterV2 1 
+bool	Events/Flag_ecalLaserCorrFilter	Flag_ecalLaserCorrFilter 1 
+bool	Events/Flag_eeBadScFilter	Flag_eeBadScFilter 1 
+bool	Events/Flag_globalSuperTightHalo2016Filter	Flag_globalSuperTightHalo2016Filter 1 
+bool	Events/Flag_globalTightHalo2016Filter	Flag_globalTightHalo2016Filter 1 
+bool	Events/Flag_goodVertices	Flag_goodVertices 1 
+bool	Events/Flag_hcalLaserEventFilter	Flag_hcalLaserEventFilter 1 
+bool	Events/Flag_muonBadTrackFilter	Flag_muonBadTrackFilter 1 
+bool	Events/Flag_trkPOGFilters	Flag_trkPOGFilters 1 
+bool	Events/Flag_trkPOG_logErrorTooManyClusters	Flag_trkPOG_logErrorTooManyClusters 1 
+bool	Events/Flag_trkPOG_manystripclus53X	Flag_trkPOG_manystripclus53X 1 
+bool	Events/Flag_trkPOG_toomanystripclus53X	Flag_trkPOG_toomanystripclus53X 1 
+float	Events/GenDressedLepton_eta	GenDressedLepton_eta 6 nGenDressedLepton
+float	Events/GenDressedLepton_mass	GenDressedLepton_mass 6 nGenDressedLepton
+int	Events/GenDressedLepton_pdgId	GenDressedLepton_pdgId 6 nGenDressedLepton
+float	Events/GenDressedLepton_phi	GenDressedLepton_phi 6 nGenDressedLepton
+float	Events/GenDressedLepton_pt	GenDressedLepton_pt 6 nGenDressedLepton
+float	Events/GenJetAK8_eta	GenJetAK8_eta 12 nGenJetAK8
+uchar	Events/GenJetAK8_hadronFlavour	GenJetAK8_hadronFlavour 12 nGenJetAK8
+float	Events/GenJetAK8_mass	GenJetAK8_mass 12 nGenJetAK8
+int	Events/GenJetAK8_partonFlavour	GenJetAK8_partonFlavour 12 nGenJetAK8
+float	Events/GenJetAK8_phi	GenJetAK8_phi 12 nGenJetAK8
+float	Events/GenJetAK8_pt	GenJetAK8_pt 12 nGenJetAK8
+float	Events/GenJet_eta	GenJet_eta 32 nGenJet
+uchar	Events/GenJet_hadronFlavour	GenJet_hadronFlavour 32 nGenJet
+float	Events/GenJet_mass	GenJet_mass 32 nGenJet
+int	Events/GenJet_partonFlavour	GenJet_partonFlavour 32 nGenJet
+float	Events/GenJet_phi	GenJet_phi 32 nGenJet
+float	Events/GenJet_pt	GenJet_pt 32 nGenJet
+float	Events/GenMET_phi	GenMET_phi 1 
+float	Events/GenMET_pt	GenMET_pt 1 
+float	Events/GenPart_eta	GenPart_eta 312 nGenPart
+int	Events/GenPart_genPartIdxMother	GenPart_genPartIdxMother 312 nGenPart
+float	Events/GenPart_mass	GenPart_mass 312 nGenPart
+int	Events/GenPart_pdgId	GenPart_pdgId 312 nGenPart
+float	Events/GenPart_phi	GenPart_phi 312 nGenPart
+float	Events/GenPart_pt	GenPart_pt 312 nGenPart
+int	Events/GenPart_status	GenPart_status 312 nGenPart
+int	Events/GenPart_statusFlags	GenPart_statusFlags 312 nGenPart
+int	Events/GenVisTau_charge	GenVisTau_charge 5 nGenVisTau
+float	Events/GenVisTau_eta	GenVisTau_eta 5 nGenVisTau
+int	Events/GenVisTau_genPartIdxMother	GenVisTau_genPartIdxMother 5 nGenVisTau
+float	Events/GenVisTau_mass	GenVisTau_mass 5 nGenVisTau
+float	Events/GenVisTau_phi	GenVisTau_phi 5 nGenVisTau
+float	Events/GenVisTau_pt	GenVisTau_pt 5 nGenVisTau
+int	Events/GenVisTau_status	GenVisTau_status 5 nGenVisTau
+float	Events/Generator_binvar	Generator_binvar 1 
+int	Events/Generator_id1	Generator_id1 1 
+int	Events/Generator_id2	Generator_id2 1 
+float	Events/Generator_scalePDF	Generator_scalePDF 1 
+float	Events/Generator_weight	Generator_weight 1 
+float	Events/Generator_x1	Generator_x1 1 
+float	Events/Generator_x2	Generator_x2 1 
+float	Events/Generator_xpdf1	Generator_xpdf1 1 
+float	Events/Generator_xpdf2	Generator_xpdf2 1 
+float	Events/IsoTrack_dxy	IsoTrack_dxy 7 nIsoTrack
+float	Events/IsoTrack_dz	IsoTrack_dz 7 nIsoTrack
+float	Events/IsoTrack_eta	IsoTrack_eta 7 nIsoTrack
+int	Events/IsoTrack_fromPV	IsoTrack_fromPV 7 nIsoTrack
+bool	Events/IsoTrack_isFromLostTrack	IsoTrack_isFromLostTrack 7 nIsoTrack
+bool	Events/IsoTrack_isHighPurityTrack	IsoTrack_isHighPurityTrack 7 nIsoTrack
+bool	Events/IsoTrack_isPFcand	IsoTrack_isPFcand 7 nIsoTrack
+float	Events/IsoTrack_miniPFRelIso_all	IsoTrack_miniPFRelIso_all 7 nIsoTrack
+float	Events/IsoTrack_miniPFRelIso_chg	IsoTrack_miniPFRelIso_chg 7 nIsoTrack
+int	Events/IsoTrack_pdgId	IsoTrack_pdgId 7 nIsoTrack
+float	Events/IsoTrack_pfRelIso03_all	IsoTrack_pfRelIso03_all 7 nIsoTrack
+float	Events/IsoTrack_pfRelIso03_chg	IsoTrack_pfRelIso03_chg 7 nIsoTrack
+float	Events/IsoTrack_phi	IsoTrack_phi 7 nIsoTrack
+float	Events/IsoTrack_pt	IsoTrack_pt 7 nIsoTrack
+float	Events/Jet_area	Jet_area 30 nJet
+float	Events/Jet_bRegCorr	Jet_bRegCorr 30 nJet
+float	Events/Jet_bRegRes	Jet_bRegRes 30 nJet
+float	Events/Jet_btagCMVA	Jet_btagCMVA 30 nJet
+float	Events/Jet_btagCSVV2	Jet_btagCSVV2 30 nJet
+float	Events/Jet_btagDeepB	Jet_btagDeepB 30 nJet
+float	Events/Jet_btagDeepC	Jet_btagDeepC 30 nJet
+float	Events/Jet_btagDeepFlavB	Jet_btagDeepFlavB 30 nJet
+float	Events/Jet_chEmEF	Jet_chEmEF 30 nJet
+float	Events/Jet_chHEF	Jet_chHEF 30 nJet
+uchar	Events/Jet_cleanmask	Jet_cleanmask 30 nJet
+int	Events/Jet_electronIdx1	Jet_electronIdx1 30 nJet
+int	Events/Jet_electronIdx2	Jet_electronIdx2 30 nJet
+float	Events/Jet_eta	Jet_eta 30 nJet
+int	Events/Jet_genJetIdx	Jet_genJetIdx 30 nJet
+int	Events/Jet_hadronFlavour	Jet_hadronFlavour 30 nJet
+int	Events/Jet_jetId	Jet_jetId 30 nJet
+float	Events/Jet_mass	Jet_mass 30 nJet
+float	Events/Jet_muEF	Jet_muEF 30 nJet
+int	Events/Jet_muonIdx1	Jet_muonIdx1 30 nJet
+int	Events/Jet_muonIdx2	Jet_muonIdx2 30 nJet
+int	Events/Jet_nConstituents	Jet_nConstituents 30 nJet
+int	Events/Jet_nElectrons	Jet_nElectrons 30 nJet
+int	Events/Jet_nMuons	Jet_nMuons 30 nJet
+float	Events/Jet_neEmEF	Jet_neEmEF 30 nJet
+float	Events/Jet_neHEF	Jet_neHEF 30 nJet
+int	Events/Jet_partonFlavour	Jet_partonFlavour 30 nJet
+float	Events/Jet_phi	Jet_phi 30 nJet
+float	Events/Jet_pt	Jet_pt 30 nJet
+int	Events/Jet_puId	Jet_puId 30 nJet
+float	Events/Jet_qgl	Jet_qgl 30 nJet
+float	Events/Jet_rawFactor	Jet_rawFactor 30 nJet
+bool	Events/L1Reco_step	L1Reco_step 1 
+bool	Events/L1simulation_step	L1simulation_step 1 
+float	Events/METFixEE2017_MetUnclustEnUpDeltaX	METFixEE2017_MetUnclustEnUpDeltaX 1 
+float	Events/METFixEE2017_MetUnclustEnUpDeltaY	METFixEE2017_MetUnclustEnUpDeltaY 1 
+float	Events/METFixEE2017_phi	METFixEE2017_phi 1 
+float	Events/METFixEE2017_pt	METFixEE2017_pt 1 
+float	Events/METFixEE2017_sumEt	METFixEE2017_sumEt 1 
+float	Events/MET_MetUnclustEnUpDeltaX	MET_MetUnclustEnUpDeltaX 1 
+float	Events/MET_MetUnclustEnUpDeltaY	MET_MetUnclustEnUpDeltaY 1 
+float	Events/MET_fiducialGenPhi	MET_fiducialGenPhi 1 
+float	Events/MET_fiducialGenPt	MET_fiducialGenPt 1 
+float	Events/MET_phi	MET_phi 1 
+float	Events/MET_pt	MET_pt 1 
+float	Events/MET_sumEt	MET_sumEt 1 
+int	Events/Muon_charge	Muon_charge 9 nMuon
+uchar	Events/Muon_cleanmask	Muon_cleanmask 9 nMuon
+float	Events/Muon_dxy	Muon_dxy 9 nMuon
+float	Events/Muon_dxyErr	Muon_dxyErr 9 nMuon
+float	Events/Muon_dz	Muon_dz 9 nMuon
+float	Events/Muon_dzErr	Muon_dzErr 9 nMuon
+float	Events/Muon_eta	Muon_eta 9 nMuon
+uchar	Events/Muon_genPartFlav	Muon_genPartFlav 9 nMuon
+int	Events/Muon_genPartIdx	Muon_genPartIdx 9 nMuon
+uchar	Events/Muon_highPtId	Muon_highPtId 9 nMuon
+bool	Events/Muon_inTimeMuon	Muon_inTimeMuon 9 nMuon
+float	Events/Muon_ip3d	Muon_ip3d 9 nMuon
+bool	Events/Muon_isGlobal	Muon_isGlobal 9 nMuon
+bool	Events/Muon_isPFcand	Muon_isPFcand 9 nMuon
+bool	Events/Muon_isTracker	Muon_isTracker 9 nMuon
+int	Events/Muon_jetIdx	Muon_jetIdx 9 nMuon
+float	Events/Muon_jetRelIso	Muon_jetRelIso 9 nMuon
+float	Events/Muon_mass	Muon_mass 9 nMuon
+bool	Events/Muon_mediumId	Muon_mediumId 9 nMuon
+bool	Events/Muon_mediumPromptId	Muon_mediumPromptId 9 nMuon
+uchar	Events/Muon_miniIsoId	Muon_miniIsoId 9 nMuon
+float	Events/Muon_miniPFRelIso_all	Muon_miniPFRelIso_all 9 nMuon
+float	Events/Muon_miniPFRelIso_chg	Muon_miniPFRelIso_chg 9 nMuon
+uchar	Events/Muon_multiIsoId	Muon_multiIsoId 9 nMuon
+uchar	Events/Muon_mvaId	Muon_mvaId 9 nMuon
+float	Events/Muon_mvaTTH	Muon_mvaTTH 9 nMuon
+int	Events/Muon_nStations	Muon_nStations 9 nMuon
+int	Events/Muon_nTrackerLayers	Muon_nTrackerLayers 9 nMuon
+int	Events/Muon_pdgId	Muon_pdgId 9 nMuon
+uchar	Events/Muon_pfIsoId	Muon_pfIsoId 9 nMuon
+float	Events/Muon_pfRelIso03_all	Muon_pfRelIso03_all 9 nMuon
+float	Events/Muon_pfRelIso03_chg	Muon_pfRelIso03_chg 9 nMuon
+float	Events/Muon_pfRelIso04_all	Muon_pfRelIso04_all 9 nMuon
+float	Events/Muon_phi	Muon_phi 9 nMuon
+float	Events/Muon_pt	Muon_pt 9 nMuon
+float	Events/Muon_ptErr	Muon_ptErr 9 nMuon
+float	Events/Muon_segmentComp	Muon_segmentComp 9 nMuon
+float	Events/Muon_sip3d	Muon_sip3d 9 nMuon
+bool	Events/Muon_softId	Muon_softId 9 nMuon
+bool	Events/Muon_softMvaId	Muon_softMvaId 9 nMuon
+int	Events/Muon_tightCharge	Muon_tightCharge 9 nMuon
+bool	Events/Muon_tightId	Muon_tightId 9 nMuon
+uchar	Events/Muon_tkIsoId	Muon_tkIsoId 9 nMuon
+bool	Events/Muon_triggerIdLoose	Muon_triggerIdLoose 9 nMuon
+float	Events/OtherPV_z	OtherPV_z 3 nOtherPV
+float	Events/PSWeight	PSWeight 1 nPSWeight
+float	Events/PV_chi2	PV_chi2 1 
+float	Events/PV_ndof	PV_ndof 1 
+int	Events/PV_npvs	PV_npvs 1 
+int	Events/PV_npvsGood	PV_npvsGood 1 
+float	Events/PV_score	PV_score 1 
+float	Events/PV_x	PV_x 1 
+float	Events/PV_y	PV_y 1 
+float	Events/PV_z	PV_z 1 
+int	Events/Photon_charge	Photon_charge 15 nPhoton
+uchar	Events/Photon_cleanmask	Photon_cleanmask 15 nPhoton
+int	Events/Photon_cutBasedBitmap	Photon_cutBasedBitmap 15 nPhoton
+int	Events/Photon_cutBasedV1Bitmap	Photon_cutBasedV1Bitmap 15 nPhoton
+float	Events/Photon_eCorr	Photon_eCorr 15 nPhoton
+int	Events/Photon_electronIdx	Photon_electronIdx 15 nPhoton
+bool	Events/Photon_electronVeto	Photon_electronVeto 15 nPhoton
+float	Events/Photon_energyErr	Photon_energyErr 15 nPhoton
+float	Events/Photon_eta	Photon_eta 15 nPhoton
+uchar	Events/Photon_genPartFlav	Photon_genPartFlav 15 nPhoton
+int	Events/Photon_genPartIdx	Photon_genPartIdx 15 nPhoton
+float	Events/Photon_hoe	Photon_hoe 15 nPhoton
+bool	Events/Photon_isScEtaEB	Photon_isScEtaEB 15 nPhoton
+bool	Events/Photon_isScEtaEE	Photon_isScEtaEE 15 nPhoton
+int	Events/Photon_jetIdx	Photon_jetIdx 15 nPhoton
+float	Events/Photon_mass	Photon_mass 15 nPhoton
+float	Events/Photon_mvaID	Photon_mvaID 15 nPhoton
+float	Events/Photon_mvaIDV1	Photon_mvaIDV1 15 nPhoton
+bool	Events/Photon_mvaID_WP80	Photon_mvaID_WP80 15 nPhoton
+bool	Events/Photon_mvaID_WP90	Photon_mvaID_WP90 15 nPhoton
+int	Events/Photon_pdgId	Photon_pdgId 15 nPhoton
+float	Events/Photon_pfRelIso03_all	Photon_pfRelIso03_all 15 nPhoton
+float	Events/Photon_pfRelIso03_chg	Photon_pfRelIso03_chg 15 nPhoton
+float	Events/Photon_phi	Photon_phi 15 nPhoton
+bool	Events/Photon_pixelSeed	Photon_pixelSeed 15 nPhoton
+float	Events/Photon_pt	Photon_pt 15 nPhoton
+float	Events/Photon_r9	Photon_r9 15 nPhoton
+float	Events/Photon_sieie	Photon_sieie 15 nPhoton
+int	Events/Photon_vidNestedWPBitmap	Photon_vidNestedWPBitmap 15 nPhoton
+int	Events/Pileup_nPU	Pileup_nPU 1 
+float	Events/Pileup_nTrueInt	Pileup_nTrueInt 1 
+int	Events/Pileup_sumEOOT	Pileup_sumEOOT 1 
+int	Events/Pileup_sumLOOT	Pileup_sumLOOT 1 
+float	Events/PuppiMET_phi	PuppiMET_phi 1 
+float	Events/PuppiMET_pt	PuppiMET_pt 1 
+float	Events/PuppiMET_sumEt	PuppiMET_sumEt 1 
+float	Events/RawMET_phi	RawMET_phi 1 
+float	Events/RawMET_pt	RawMET_pt 1 
+float	Events/RawMET_sumEt	RawMET_sumEt 1 
+float	Events/SV_chi2	SV_chi2 29 nSV
+float	Events/SV_dlen	SV_dlen 29 nSV
+float	Events/SV_dlenSig	SV_dlenSig 29 nSV
+float	Events/SV_eta	SV_eta 29 nSV
+float	Events/SV_mass	SV_mass 29 nSV
+float	Events/SV_ndof	SV_ndof 29 nSV
+float	Events/SV_pAngle	SV_pAngle 29 nSV
+float	Events/SV_phi	SV_phi 29 nSV
+float	Events/SV_pt	SV_pt 29 nSV
+float	Events/SV_x	SV_x 29 nSV
+float	Events/SV_y	SV_y 29 nSV
+float	Events/SV_z	SV_z 29 nSV
+float	Events/SoftActivityJetHT	SoftActivityJetHT 1 
+float	Events/SoftActivityJetHT10	SoftActivityJetHT10 1 
+float	Events/SoftActivityJetHT2	SoftActivityJetHT2 1 
+float	Events/SoftActivityJetHT5	SoftActivityJetHT5 1 
+int	Events/SoftActivityJetNjets10	SoftActivityJetNjets10 1 
+int	Events/SoftActivityJetNjets2	SoftActivityJetNjets2 1 
+int	Events/SoftActivityJetNjets5	SoftActivityJetNjets5 1 
+float	Events/SoftActivityJet_eta	SoftActivityJet_eta 6 nSoftActivityJet
+float	Events/SoftActivityJet_phi	SoftActivityJet_phi 6 nSoftActivityJet
+float	Events/SoftActivityJet_pt	SoftActivityJet_pt 6 nSoftActivityJet
+float	Events/SubGenJetAK8_eta	SubGenJetAK8_eta 24 nSubGenJetAK8
+float	Events/SubGenJetAK8_mass	SubGenJetAK8_mass 24 nSubGenJetAK8
+float	Events/SubGenJetAK8_phi	SubGenJetAK8_phi 24 nSubGenJetAK8
+float	Events/SubGenJetAK8_pt	SubGenJetAK8_pt 24 nSubGenJetAK8
+float	Events/SubJet_btagCMVA	SubJet_btagCMVA 16 nSubJet
+float	Events/SubJet_btagCSVV2	SubJet_btagCSVV2 16 nSubJet
+float	Events/SubJet_btagDeepB	SubJet_btagDeepB 16 nSubJet
+float	Events/SubJet_eta	SubJet_eta 16 nSubJet
+float	Events/SubJet_mass	SubJet_mass 16 nSubJet
+float	Events/SubJet_n2b1	SubJet_n2b1 16 nSubJet
+float	Events/SubJet_n3b1	SubJet_n3b1 16 nSubJet
+float	Events/SubJet_phi	SubJet_phi 16 nSubJet
+float	Events/SubJet_pt	SubJet_pt 16 nSubJet
+float	Events/SubJet_rawFactor	SubJet_rawFactor 16 nSubJet
+float	Events/SubJet_tau1	SubJet_tau1 16 nSubJet
+float	Events/SubJet_tau2	SubJet_tau2 16 nSubJet
+float	Events/SubJet_tau3	SubJet_tau3 16 nSubJet
+float	Events/SubJet_tau4	SubJet_tau4 16 nSubJet
+int	Events/Tau_charge	Tau_charge 9 nTau
+float	Events/Tau_chargedIso	Tau_chargedIso 9 nTau
+uchar	Events/Tau_cleanmask	Tau_cleanmask 9 nTau
+int	Events/Tau_decayMode	Tau_decayMode 9 nTau
+float	Events/Tau_dxy	Tau_dxy 9 nTau
+float	Events/Tau_dz	Tau_dz 9 nTau
+float	Events/Tau_eta	Tau_eta 9 nTau
+uchar	Events/Tau_genPartFlav	Tau_genPartFlav 9 nTau
+int	Events/Tau_genPartIdx	Tau_genPartIdx 9 nTau
+uchar	Events/Tau_idAntiEle	Tau_idAntiEle 9 nTau
+uchar	Events/Tau_idAntiMu	Tau_idAntiMu 9 nTau
+bool	Events/Tau_idDecayMode	Tau_idDecayMode 9 nTau
+bool	Events/Tau_idDecayModeNewDMs	Tau_idDecayModeNewDMs 9 nTau
+uchar	Events/Tau_idMVAnewDM2017v2	Tau_idMVAnewDM2017v2 9 nTau
+uchar	Events/Tau_idMVAoldDM	Tau_idMVAoldDM 9 nTau
+uchar	Events/Tau_idMVAoldDM2017v1	Tau_idMVAoldDM2017v1 9 nTau
+uchar	Events/Tau_idMVAoldDM2017v2	Tau_idMVAoldDM2017v2 9 nTau
+uchar	Events/Tau_idMVAoldDMdR032017v2	Tau_idMVAoldDMdR032017v2 9 nTau
+int	Events/Tau_jetIdx	Tau_jetIdx 9 nTau
+float	Events/Tau_leadTkDeltaEta	Tau_leadTkDeltaEta 9 nTau
+float	Events/Tau_leadTkDeltaPhi	Tau_leadTkDeltaPhi 9 nTau
+float	Events/Tau_leadTkPtOverTauPt	Tau_leadTkPtOverTauPt 9 nTau
+float	Events/Tau_mass	Tau_mass 9 nTau
+float	Events/Tau_neutralIso	Tau_neutralIso 9 nTau
+float	Events/Tau_phi	Tau_phi 9 nTau
+float	Events/Tau_photonsOutsideSignalCone	Tau_photonsOutsideSignalCone 9 nTau
+float	Events/Tau_pt	Tau_pt 9 nTau
+float	Events/Tau_puCorr	Tau_puCorr 9 nTau
+float	Events/Tau_rawAntiEle	Tau_rawAntiEle 9 nTau
+int	Events/Tau_rawAntiEleCat	Tau_rawAntiEleCat 9 nTau
+float	Events/Tau_rawIso	Tau_rawIso 9 nTau
+float	Events/Tau_rawIsodR03	Tau_rawIsodR03 9 nTau
+float	Events/Tau_rawMVAnewDM2017v2	Tau_rawMVAnewDM2017v2 9 nTau
+float	Events/Tau_rawMVAoldDM	Tau_rawMVAoldDM 9 nTau
+float	Events/Tau_rawMVAoldDM2017v1	Tau_rawMVAoldDM2017v1 9 nTau
+float	Events/Tau_rawMVAoldDM2017v2	Tau_rawMVAoldDM2017v2 9 nTau
+float	Events/Tau_rawMVAoldDMdR032017v2	Tau_rawMVAoldDMdR032017v2 9 nTau
+float	Events/TkMET_phi	TkMET_phi 1 
+float	Events/TkMET_pt	TkMET_pt 1 
+float	Events/TkMET_sumEt	TkMET_sumEt 1 
+float	Events/btagWeight_CSVV2	btagWeight_CSVV2 1 
+float	Events/btagWeight_DeepCSVB	btagWeight_DeepCSVB 1 
+ulong64	Events/event	event 1 
+double	Events/eventWeight	eventWeight 1 
+float	Events/fixedGridRhoFastjetAll	fixedGridRhoFastjetAll 1 
+float	Events/fixedGridRhoFastjetCentralCalo	fixedGridRhoFastjetCentralCalo 1 
+float	Events/fixedGridRhoFastjetCentralNeutral	fixedGridRhoFastjetCentralNeutral 1 
+int	Events/genTtbarId	genTtbarId 1 
+float	Events/genWeight	genWeight 1 
+uint	Events/luminosityBlock	luminosityBlock 1 
+uint	Events/run	run 1 
