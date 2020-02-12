@@ -1,14 +1,13 @@
-#info analysis
-#  title "Search for supersymmetry in multijet events with missing transverse momentum in 
-# proton-proton collisions at 13 TeV"
-#  experiment CMS
-#  id SUS-16-033
-#  publication Phys. Rev. D 96, 032003 (2017)
-#  sqrtS 13.0
-#  lumi 35.9
-#  arXiv 1704.07781  
-#  hepdata 
-#  doi 10.1103/PhysRevD.96.032003
+info analysis
+  title "Search for supersymmetry in multijet events with missing transverse momentum in  proton-proton collisions at 13 TeV"
+  experiment CMS
+  id SUS-16-033
+  publication Phys. Rev. D 96, 032003 (2017)
+  sqrtS 13.0
+  lumi 35.9
+  arXiv 1704.07781  
+  hepdata 
+  doi 10.1103/PhysRevD.96.032003
 
 object jets
   take Jet
@@ -45,6 +44,9 @@ object leptons
 object MET
   take MissingET
 
+object MHT
+  take MissingET
+
 #object tracks
 #  take Track
 # Cutflow table gives ele, mu and had tracks separately - can do that
@@ -58,97 +60,103 @@ object MET
 #  select MTtr > 100
 
 define HT = sum(jets.pT)
-define MHT = -sum(jetsmht)
+#define MHT = Sum(jetsmht)
 
 # preselection region
 region presel
   select size(jets) >= 2
   select HT > 300
-  select MHT > 300
+  select MHT.pT > 300
   select size(muons) == 0
   select size(electrons) == 0
   #select size(tracks) == 0
-  select dphi(jets[0], MHT) > 0.5  
-  select dphi(jets[1], MHT) > 0.5  
-  select size(jets) >= 3 ? dphi(jets[2], MHT) > 0.3
-  select size(jets) >= 4 ? dphi(jets[3], MHT) > 0.3
+  select dPhi(jets[0], MHT) > 0.5  
+  select dPhi(jets[1], MHT) > 0.5  
+  select size(jets) >= 3 ? dPhi(jets[2], MHT) > 0.3
+  select size(jets) >= 4 ? dPhi(jets[3], MHT) > 0.3
 
-# 2 jets signal regions
-region 2jets
+# Aggregate search regions as shown in Table 3 of the paper:
+region SR1
   select presel
-  bin size(bjets) 0 1 2
-  bin MHT > 300 and MHT < 350 and HT > 300 and HT < 500
-  bin MHT > 300 and MHT < 350 and HT > 500 and HT < 1000
-  bin MHT > 300 and MHT < 350 and HT > 1000
-  bin MHT > 350 and MHT < 500 and HT > 300 and HT < 500
-  bin MHT > 350 and MHT < 500 and HT > 500 and HT < 1000
-  bin MHT > 350 and MHT < 500 and HT > 1000
-  bin MHT > 500 and MHT < 750 and HT > 500 and HT < 1000
-  bin MHT > 500 and MHT < 750 and HT > 1000
-  bin MHT > 750 and HT > 750 and HT < 1500
-  bin MHT > 750 and HT > 1500 
+  select size(jets) >= 2
+  select size(bjets) == 0
+  select HT >= 500
+  select MHT.pT >= 500
 
-# 3-4 jets signal regions
-region 34jets
+region SR2
   select presel
-  select size(jets) [] 3 4
-  bin size(bjets) 0 1 2 3
-  bin MHT > 300 and MHT < 350 and HT > 300 and HT < 500
-  bin MHT > 300 and MHT < 350 and HT > 500 and HT < 1000
-  bin MHT > 300 and MHT < 350 and HT > 1000
-  bin MHT > 350 and MHT < 500 and HT > 300 and HT < 500
-  bin MHT > 350 and MHT < 500 and HT > 500 and HT < 1000
-  bin MHT > 350 and MHT < 500 and HT > 1000
-  bin MHT > 500 and MHT < 750 and HT > 500 and HT < 1000
-  bin MHT > 500 and MHT < 750 and HT > 1000
-  bin MHT > 750 and HT > 750 and HT < 1500
-  bin MHT > 750 and HT > 1500 
+  select size(jets) >= 3
+  select size(bjets) == 0
+  select HT >= 1500
+  select MHT.pT >= 750
 
-# 5-6 jets signal regions
-region 56jets
+region SR3
   select presel
-  select size(jets) [] 5 6
-  bin size(bjets) 0 1 2 3
-  bin MHT > 300 and MHT < 350 and HT > 300 and HT < 500
-  bin MHT > 300 and MHT < 350 and HT > 500 and HT < 1000
-  bin MHT > 300 and MHT < 350 and HT > 1000
-  bin MHT > 350 and MHT < 500 and HT > 300 and HT < 500
-  bin MHT > 350 and MHT < 500 and HT > 500 and HT < 1000
-  bin MHT > 350 and MHT < 500 and HT > 1000
-  bin MHT > 500 and MHT < 750 and HT > 500 and HT < 1000
-  bin MHT > 500 and MHT < 750 and HT > 1000
-  bin MHT > 750 and HT > 750 and HT < 1500
-  bin MHT > 750 and HT > 1500 
+  select size(jets) >= 5
+  select size(bjets) == 0
+  select HT >= 500
+  select MHT.pT >= 500
 
-# 7-8 jets signal regions
-region 78jets
+region SR4
   select presel
-  select size(jets) [] 7 8
-  bin size(bjets) 0 1 2 3
-  bin MHT > 300 and MHT < 350 and HT > 300 and HT < 500
-  bin MHT > 300 and MHT < 350 and HT > 500 and HT < 1000
-  bin MHT > 300 and MHT < 350 and HT > 1000
-  bin MHT > 350 and MHT < 500 and HT > 300 and HT < 500
-  bin MHT > 350 and MHT < 500 and HT > 500 and HT < 1000
-  bin MHT > 350 and MHT < 500 and HT > 1000
-  bin MHT > 500 and MHT < 750 and HT > 500 and HT < 1000
-  bin MHT > 500 and MHT < 750 and HT > 1000
-  bin MHT > 750 and HT > 750 and HT < 1500
-  bin MHT > 750 and HT > 1500 
+  select size(jets) >= 5
+  select size(bjets) == 0
+  select HT >= 1500
+  select MHT.pT >= 750
 
-# >=9 jets signal regions
-region 9jets
+region SR5
   select presel
   select size(jets) >= 9
-  bin size(bjets) 0 1 2 3
-  bin MHT > 300 and MHT < 350 and HT > 300 and HT < 500
-  bin MHT > 300 and MHT < 350 and HT > 500 and HT < 1000
-  bin MHT > 300 and MHT < 350 and HT > 1000
-  bin MHT > 350 and MHT < 500 and HT > 300 and HT < 500
-  bin MHT > 350 and MHT < 500 and HT > 500 and HT < 1000
-  bin MHT > 350 and MHT < 500 and HT > 1000
-  bin MHT > 500 and MHT < 750 and HT > 500 and HT < 1000
-  bin MHT > 500 and MHT < 750 and HT > 1000
-  bin MHT > 750 and HT > 750 and HT < 1500
-  bin MHT > 750 and HT > 1500 
+  select size(bjets) == 0
+  select HT >= 1500
+  select MHT.pT >= 750
+
+region SR6
+  select presel
+  select size(jets) >= 2
+  select size(bjets) >= 2
+  select HT >= 500
+  select MHT.pT >= 500
+
+region SR7
+  select presel
+  select size(jets) >= 3
+  select size(bjets) >= 1
+  select HT >= 750
+  select MHT.pT >= 750
+
+region SR8
+  select presel
+  select size(jets) >= 5
+  select size(bjets) >= 3
+  select HT >= 500
+  select MHT.pT >= 500
+
+region SR9
+  select presel
+  select size(jets) >= 5
+  select size(bjets) >= 2
+  select HT >= 1500
+  select MHT.pT >= 750
+
+region SR10
+  select presel
+  select size(jets) >= 9
+  select size(bjets) >= 3
+  select HT >= 750
+  select MHT.pT >= 750
+
+region SR11
+  select presel
+  select size(jets) >= 7
+  select size(bjets) >= 1
+  select HT >= 300
+  select MHT.pT >= 300
+
+region SR12
+  select presel
+  select size(jets) >= 5
+  select size(bjets) >= 1
+  select HT >= 750
+  select MHT.pT >= 750
 
